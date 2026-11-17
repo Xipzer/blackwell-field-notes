@@ -1,0 +1,52 @@
+time,load,voltage_mv,lock_mhz,offset_mhz,result,errors,clock_min_mhz,clock_max_mhz,median_mv,max_w,driver_resets,note
+2026-11-17 10:42:28,heavy,1090,3195,270,PASS,0,3150,3187,,573,0,"first pass, full load: the card dropped under the lock at 573 W, so the load was cut to 3 blocks per SM"
+2026-11-17 10:45:34,heavy,1090,3195,270,PASS,0,3127,3187,,495,0,first pass
+2026-11-17 10:47:26,heavy,1090,3225,300,PASS,0,3157,3217,,496,0,first pass
+2026-11-17 10:49:17,heavy,1090,3255,330,NOT REACHED,0,3180,3195,,500,,"first pass: NOT REACHED here was a tolerance bug (needed 8 MHz, clock sits 15 to 23 under)"
+2026-11-17 10:51:30,heavy,1050,3120,270,PASS,0,3082,3112,,466,0,first pass
+2026-11-17 10:53:21,heavy,1050,3150,300,PASS,0,3105,3142,,466,0,first pass
+2026-11-17 10:55:12,heavy,1050,3180,330,NOT REACHED,0,3135,3150,,473,,"first pass: NOT REACHED here was a tolerance bug (needed 8 MHz, clock sits 15 to 23 under)"
+2026-11-17 10:57:25,heavy,1000,2985,270,NOT REACHED,0,2962,2970,,391,,"first pass: NOT REACHED here was a tolerance bug (needed 8 MHz, clock sits 15 to 23 under)"
+2026-11-17 10:59:37,heavy,950,2805,270,PASS,0,2790,2797,,336,0,first pass
+2026-11-17 11:01:30,heavy,950,2835,300,PASS,0,2820,2827,,340,0,first pass
+2026-11-17 11:03:21,heavy,950,2865,330,PASS,0,2842,2857,,344,0,first pass
+2026-11-17 11:05:12,heavy,950,2895,360,PASS,0,2872,2887,,346,0,first pass
+2026-11-17 11:07:04,heavy,950,2925,390,PASS,0,2902,2917,,352,0,first pass
+2026-11-17 11:08:55,heavy,950,2955,420,NOT REACHED,0,2932,2940,,354,,"first pass: NOT REACHED here was a tolerance bug (needed 8 MHz, clock sits 15 to 23 under)"
+2026-11-17 11:11:08,heavy,900,2272,270,NOT REACHED,0,2250,2250,,240,,"first pass: NOT REACHED here was a tolerance bug (needed 8 MHz, clock sits 15 to 23 under)"
+2026-11-17 11:13:56,heavy,1090,3255,330,NOT REACHED,0,3180,3187,,482,,voltage ceiling under heavy load
+2026-11-17 11:16:09,heavy,1050,3180,330,PASS,0,3135,3165,,469,0,
+2026-11-17 11:18:00,heavy,1050,3210,360,PASS,0,3165,3202,,442,0,
+2026-11-17 11:19:52,heavy,1050,3240,390,PASS,0,3195,3232,,471,0,
+2026-11-17 11:21:43,heavy,1050,3270,420,PASS,0,3217,3262,,477,0,
+2026-11-17 11:23:35,heavy,1050,3300,450,PASS,0,3247,3270,,480,0,
+2026-11-17 11:25,heavy,1050,3330,480,"FAIL: driver hang, then bugcheck 0x133",,,,,,,
+2026-11-17 11:39:40,heavy,1000,2985,270,PASS,0,2962,2977,,389,0,
+2026-11-17 11:41:35,heavy,1000,3015,300,PASS,0,2992,3007,,389,0,
+2026-11-17 11:43:30,heavy,1000,3045,330,PASS,0,3015,3037,,396,0,
+2026-11-17 11:45:28,heavy,1000,3075,360,PASS,0,3045,3067,,402,0,
+2026-11-17 11:47:23,heavy,1000,3105,390,PASS,0,3075,3097,,401,0,
+2026-11-17 11:49:18,heavy,1000,3135,420,PASS,0,3105,3127,,410,0,
+2026-11-17 11:51:14,heavy,1000,3165,450,PASS,0,3135,3157,,406,0,
+2026-11-17 11:53:08,heavy,1000,3195,480,PASS,0,3157,3187,,396,0,
+2026-11-17 11:55,heavy,1000,3225,510,FAIL: PC went down (bugcheck 0x133),,,,,,,
+2026-11-17 12:06:58,heavy,950,2985,450,PASS,0,2962,2970,,354,0,
+2026-11-17 12:08:12,heavy,950,3000,465,PASS,0,2977,2977,,337,0,
+2026-11-17 12:09:27,heavy,950,3015,480,PASS,0,2985,3000,,358,0,
+2026-11-17 12:10:41,heavy,950,3030,495,PASS,0,3000,3015,,361,0,
+2026-11-17 12:11,heavy,950,3045,510,FAIL: PC went down,,,,,,,time approximate
+2026-11-17 12:18:35,heavy,900,2482,480,PASS,0,2460,2460,,254,0,
+2026-11-17 12:19:47,heavy,900,2497,495,PASS,0,2475,2475,,258,0,
+2026-11-17 12:20,heavy,900,2512,510,FAIL: PC went down,,,,,,,time approximate
+2026-11-17 12:30:48,light,1100,3307,360,PASS,0,3292,3300,1105,344,0,
+2026-11-17 12:32:07,light,1100,3322,375,PASS,0,3307,3315,1105,341,0,
+2026-11-17 12:33:24,light,1100,3337,390,PASS,0,3322,3330,1105,349,0,
+2026-11-17 12:34:38,light,1100,3352,405,PASS,0,3330,3345,1105,350,0,
+2026-11-17 12:35:53,light,1100,3367,420,PASS,0,3315,3352,1105,341,0,
+2026-11-17 12:37:13,light,1100,3382,435,PASS,0,3322,3352,1095,341,0,
+2026-11-17 12:38:30,light,1100,3397,450,NOT REACHED,0,3315,3352,1090,334,0,voltage ceiling: the card holds at most 1.115 to 1.120 V
+2026-11-17 12:40:11,light,1150,3337,300,NOT REACHED,0,3255,3277,1120,333,0,voltage ceiling: the card holds at most 1.115 to 1.120 V
+2026-11-17 12:41:51,light,1200,3360,240,NOT REACHED,0,3195,3210,1120,349,0,voltage ceiling: the card holds at most 1.115 to 1.120 V
+2026-11-17 12:47:17,light,1125,3412,420,NOT REACHED,0,3270,3330,1115,357,0,voltage ceiling: the card holds at most 1.115 to 1.120 V
+2026-11-17 12:50,light,1000,3225,510,FAIL: PC went down,,,,,,,"isolated: offset only at and above this voltage, +300 below; time approximate"
+2026-11-17 12:55:38,light,950,3045,510,"FAIL: 5 driver resets, recovered without a reboot",,3030,3030,950,96,5,"isolated: offset only at and above this voltage, +300 below"

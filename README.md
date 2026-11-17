@@ -2,8 +2,8 @@
 
 Field notes from tuning one water-cooled RTX 5090: what we tried, what broke, the numbers, and what we learned.
 
-**Status: IN PROGRESS.** The per-voltage search is still running. More voltage points (900 mV, and the top of
-the curve at 1100 mV and up under light load) are being measured, and this page will be updated.
+**Status: search done, curve under validation.** The per-voltage search is finished (900 to 1125 mV). A curve
+built from it scores 15,678 in Steel Nomad. Its stress test and a hot-loop test (45 C water) are still pending.
 
 Test your own card. Do not copy our numbers. Every chip, board and loop is different.
 
@@ -31,74 +31,126 @@ Labels:
 Full version: [METHOD.md](https://github.com/Xipzer/blackwell-overclock-autopilot/blob/main/docs/METHOD.md).
 
 1. Read the factory V/F curve from an Afterburner profile.
-2. Write one offset to every point of a spare profile slot and apply it.
+2. Write an offset to a spare profile slot and apply it.
 3. Pin the clock with `nvidia-smi -lgc F,F`, so the driver runs exactly the point under test (voltage V, clock F).
-4. Run a CUDA FP32 checksum check with pulsed load for 60 to 90 s. Pass = 0 errors, no driver reset, and the
-   card actually ran the lock.
+4. Run a CUDA FP32 checksum check with pulsed load for 60 s. Pass = 0 errors, no driver reset, and the card
+   actually ran the lock.
 5. Raise F in 30 MHz steps, then 15 MHz near the edge, until the first failure. One failure per voltage.
+6. Read the live voltage from Afterburner, to know which point really ran.
 
-## Results so far (measured, heavy load)
+## Per-voltage limits (measured)
 
 Clocks are the lock targets. The clock the card reports sits 15 to 23 MHz under any lock.
+900 to 1050 mV: heavy load (3 blocks per SM). 1100 mV and up: light load (1 block per SM), because the card only
+runs its top voltages at light load.
 
-| Voltage | Factory clock | Highest pass | First fail | Offset at pass / fail | How it failed |
+| Voltage | Factory clock | Highest clean | First fail | Offset clean / fail | How it failed |
 |---|---|---|---|---|---|
-| 1090 mV | 2,925 | 3,225 | none | +300 / - | 3,255 not reached: the card would not hold 1090 mV under heavy load |
+| 900 mV | 2,002 | **2,497** | 2,512 | +495 / +510 | PC went down |
+| 950 mV | 2,535 | **3,030** | 3,045 | +495 / +510 | PC went down; isolated re-test: 5 driver resets, recovered |
+| 1000 mV | 2,715 | **3,195** | 3,225 | +480 / +510 | PC went down (0x133); isolated re-test: PC went down again |
 | 1050 mV | 2,850 | **3,300** | 3,330 | +450 / +480 | driver hang, then bugcheck 0x133 |
-| 1000 mV | 2,715 | **3,195** | 3,225 | +480 / +510 | PC went down (DPC watchdog bugcheck) |
-| 950 mV | 2,535 | **3,030** | 3,045 | +495 / +510 | PC went down |
-| 900 mV | 2,002 | 2,497 so far | in progress | +495 / - | in progress |
-| 1100 mV and up | | | | | planned, light-load search |
+| 1100 mV | 2,947 | **3,382** | none | +435 / - | 3,397 not reached: voltage ceiling (ran 3,322 to 3,352 MHz, 0 errors) |
+| 1125 mV | 2,992 | - | none | - | 3,412 not reached: median 1,115 mV |
+| 1150, 1200 mV | 3,037, 3,120 | - | none | - | never used: the card holds at most 1.120 V |
 
-Step-by-step log: [data/vf-results.json](data/vf-results.json).
+Data: [data/vf-results.json](data/vf-results.json) (summary) and [data/vf-steps.csv](data/vf-steps.csv)
+(every step: lock, offset, result, errors, live clock, voltage, power, driver resets).
+
+Correction: an earlier version of this page and of the data had 3,015 MHz at 950 mV and 2,482 at 900 mV. Those came
+from a crash-resume bug. The right values are 3,030 and 2,497.
 
 What the table says:
 
-- **The offset headroom is about the same at every voltage** (+450 to +510), while the clocks are about 105 to
-  165 MHz apart per 50 mV. Estimate: the factory curve already follows the silicon's own slope, so one good
-  offset fits most of the curve. Per point the driver would allow up to +1000.
-- **The edge offset rose about +30 MHz for each 50 mV lower.** Useful to start the next voltage close to its edge.
-- **Every limit ended in a hard crash**: a driver hang followed by a DPC_WATCHDOG_VIOLATION (0x133) blue screen,
-  never a clean "driver stopped responding and has recovered".
-- **Heavy load hides the top of the curve.** Under heavy compute the card held its voltage near 1.05 V (power,
-  current and reliability limits). At light load it runs the top of the curve, to 1.12 V and higher (owner
-  screenshot: 3,165 MHz at 26 % load with +180). So the top points need their own light-load test.
+- **The edges at 900 to 1000 mV all came at +510.** That looked like a whole-curve effect (the same offset on every
+  point), not a per-voltage limit. So we re-tested with the offset raised only at the voltage under test and +300
+  below it. 1000 mV failed again at +510 (PC went down) and 950 mV failed again at +510 (5 driver resets, recovered
+  without a reboot). **The edges are real silicon limits**, not an artefact of the uniform offset.
+- **The offset headroom is about the same at every voltage** (+435 to +495). Estimate: the factory curve already
+  follows the silicon's own slope. Per point the driver would allow up to +1000.
+- **The top of the curve is voltage limited, not stability limited.** With the voltage slider at +100 % the card
+  holds at most 1.115 to 1.120 V under any load (1.125 V only in near-idle moments). Points above that are never
+  used. At the top it ran 3,315 to 3,352 MHz with 0 errors and never crashed.
+- **The old transient crash at about 3,200 MHz did not come back** (see below). Estimate: the card now runs cooler
+  on water than when that crash was seen.
+
+## Crashes
+
+| Ending | Count | Notes |
+|---|---|---|
+| Driver hang, then DPC_WATCHDOG_VIOLATION (0x133) bugcheck, PC restarts | most limit steps | the usual ending |
+| Driver resets, recovered without a reboot | 1 | 950 mV isolated re-test, 5 resets |
+
+GPU tuning crashes do not corrupt data. A GPU fault does not touch RAM or disk contents; the exposure is the same as
+a power cut, which NTFS journaling handles. We ran `chkdsk /scan`, `sfc` and a WSL disk check after the first crash:
+all clean.
+
+One caveat (measured): files written in the last minute or two before a crash can be lost, the same as with a power
+cut. Save and close what you edit before a step, and check files you wrote just before a crash.
+
+## Curve candidate 1 (measured setup, validation pending)
+
+Rule: each point gets its clean limit minus 45 MHz (3 bins of 15 MHz), interpolated between the tested points.
+
+| Voltage | Offset | Clock |
+|---|---|---|
+| below 880 mV | +300 | untested, kept at the proven daily |
+| 900 mV | +450 | 2,452 |
+| 950 mV | +450 | 2,985 |
+| 1000 mV | +435 | 3,150 |
+| 1050 mV | +405 | 3,255 |
+| 1100 mV | +390 | 3,337 |
+| 1125 mV | +390 | 3,382 |
+
+Plus: memory +3000, power limit 104 %, clock cap 3,330 MHz with `nvidia-smi -lgc 210,3330`.
+Full table: [data/curve-candidate-1.json](data/curve-candidate-1.json).
+
+| Validation | State |
+|---|---|
+| Steel Nomad | done: 15,678 |
+| Steel Nomad Stress Test | pending |
+| Hot loop (45 C water) | pending |
 
 ## Steel Nomad (measured)
 
-| Setting | Score | Average clock | Notes |
+Same 600 W power limit in every run.
+
+| Setting | Score | Median core clock | Notes |
 |---|---|---|---|
-| +180 core / +3000 memory | 15,280 | 2,865 MHz | power-capped at 600 W; PCIe 5.0 x16; the iGPU was not involved |
-| +300 core / +3000 memory | 15,429 | 2,962 MHz | +3 % clock gave only about +1 % score |
-| Steel Nomad Stress Test, 20 loops | 98.9 % frame rate stability (pass) | | max core 51 C |
+| +180 core / +3000 memory | 15,280 | 2,871 MHz | the starting point |
+| +300 core / +3000 memory | 15,429 | 2,962 MHz | +3 % clock gave about +1 % score |
+| Curve candidate 1 | **15,678** | 3,052 MHz | max 3,150 MHz, 47 C; +2.6 % over the start |
+| Stress Test, 20 loops (earlier uniform offset) | 98.9 % frame rate stability (pass) | | max core 51 C |
 
-Reading (estimate): Steel Nomad at this level is bound by memory bandwidth and the 600 W power limit more than by
-core clock. More core offset buys little here.
-
-How that compares (source): 600 W RTX 5090s in public results score about 15,250 to 15,950.
+How that compares (source): 600 W RTX 5090s in public results score about 15,250 to 15,950. A published full
+overclock of the same card class scored 15,635:
 
 - overclock.net, stock vs undervolt vs overclock on an RTX 5090:
   https://www.overclock.net/threads/rtx-5090-msi-vanguard-soc-launch-edition-comparison-stock-vs-undervolt-vs-overclock-4090-comparison-on-4-synthetics-and-3-games.1815041
 - ComputerBase, Steel Nomad results: https://www.computerbase.de/artikel/grafikkarten/3dmark-steel-nomad-benchmark.88643
 - Hardwareluxx Steel Nomad leaderboard: https://www.hardwareluxx.de/community/threads/3dmark-steel-nomad-rangliste.1353763
 
-So this card sits in the normal range for a 600 W 5090, not at the top of it.
+Reading (estimate): Steel Nomad at this level is bound by memory bandwidth and the 600 W limit more than by core
+clock, so a per-voltage curve gains a few percent, not more. It puts this card just above that published overclock.
 
 ## The transient boost crash, and the fix
 
-What happened (measured): with a large offset (+300), the card was stable in games and benchmarks, but crashed in
-quiet moments: menus, alt-tab, loading screens. At light load the boost jumps straight to the top of the curve,
-about 3,200 MHz, a point that no heavy load ever runs and nothing had tested. The driver crashed there.
+What happened (measured, earlier): with a large uniform offset (+300), the card was stable in games and benchmarks,
+but crashed in quiet moments: menus, alt-tab, loading screens. At light load the boost jumps straight to the top of
+the curve, about 3,200 MHz then, a point that no heavy load ever runs and nothing had tested.
 
 The fix: cap the top of the clock range and keep the bottom free.
 
 ```
-nvidia-smi -lgc 210,3180
+nvidia-smi -lgc 210,3330
 ```
 
 - Needs administrator rights.
-- Does not survive a reboot. Add a logon task (the tool's `tools/install-tasks.ps1 -CapMax 3180` does this).
+- Does not survive a reboot. Add a logon task (the tool's `tools/install-tasks.ps1 -CapMax 3330` does this).
 - `nvidia-smi -rgc` removes it.
+
+In the per-voltage search the top of the curve ran 3,315 to 3,352 MHz with 0 errors and never crashed, so the cap
+now sits at 3,330 (it was 3,180).
 
 A matching public report of RTX 5090 hangs and TDR failures at light load:
 https://rog-forum.asus.com/t5/gaming-notebooks/rtx-5090-laptop-gpu-hang-and-video-tdr-failure-regression/td-p/1157396/page/2
@@ -110,19 +162,21 @@ https://rog-forum.asus.com/t5/gaming-notebooks/rtx-5090-laptop-gpu-hang-and-vide
    With a 30 MHz tolerance the same steps were plain passes.
 2. **Record the last pass before each step.** Our first crash-resume code guessed the last pass after a crash and
    recorded 3,015 MHz at 950 mV when 3,030 had passed. The tool now stores the last pass in the step marker.
-3. **Start near the edge.** Each edge costs a blue screen and a reboot. Use the slope from the voltages already done.
-4. **GPU tuning crashes do not corrupt data.** A GPU fault does not touch RAM or disk contents; the exposure is
-   the same as a power cut, which NTFS journaling handles. We ran `chkdsk /scan`, `sfc` and a WSL disk check
-   after the first crash: all clean. We stopped checking after every crash.
-5. **Afterburner details that cost time:**
+3. **Start each voltage near its extrapolated edge**, and use 15 MHz steps near it. Each edge costs a crash.
+   60 s per step was enough: every failure came within the step.
+4. **Raise only the point under test to isolate it.** A uniform offset can make several voltages fail at the same
+   offset. Keep the rest of the curve at a safe offset and re-test.
+5. **Measure the real top voltage before searching above it.** Our card never goes past 1.120 V under load, so
+   points at 1,150 and 1,200 mV are never used, and searching them wastes time.
+6. **Read the live voltage.** nvidia-smi does not report it. Afterburner's shared memory (MAHMSharedMemory) does,
+   but only after enabling the voltage graph in Settings, Monitoring.
+7. **Afterburner details that cost time:**
    - its Profiles folder is under Program Files and needs admin rights to write;
    - `MSIAfterburner.exe -Profile5` applies a slot to the running instance;
-   - the core voltage shows in its shared memory (MAHMSharedMemory) only after enabling the voltage graph in
-     Settings, Monitoring; nvidia-smi does not report voltage at all;
    - the V/F curve in the profile is hex: a 12-byte header with the point count, then per point three floats
      (voltage mV, base MHz, offset MHz), then zero padding.
-6. **A pass in a compute check is not the whole story.** The crash in daily use came from a point the check never
-   ran: the top of the curve at light load.
+8. **A pass in a compute check is not the whole story.** Validate the final curve in games, a stress test and a
+   hot loop. Ours still has the last two pending.
 
 ## Licence
 

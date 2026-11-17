@@ -1,0 +1,65 @@
+{
+ "card": "RTX 5090, water-cooled, 600 W power limit, voltage slider +100 %",
+ "check": "gpucheck (CUDA FP32 checksum), pulsed load, clock pinned with nvidia-smi -lgc F,F; clocks are lock targets, the reported clock sits 15 to 23 MHz under",
+ "per_voltage": {
+  "900": {
+   "base_mhz": 2002,
+   "max_pass_mhz": 2497,
+   "first_fail_mhz": 2512,
+   "offset_pass": 495,
+   "offset_fail": 510,
+   "fail": "PC went down"
+  },
+  "950": {
+   "base_mhz": 2535,
+   "max_pass_mhz": 3030,
+   "first_fail_mhz": 3045,
+   "offset_pass": 495,
+   "offset_fail": 510,
+   "fail": "PC went down; isolated re-test at +510 failed again (5 driver resets, recovered)"
+  },
+  "1000": {
+   "base_mhz": 2715,
+   "max_pass_mhz": 3195,
+   "first_fail_mhz": 3225,
+   "offset_pass": 480,
+   "offset_fail": 510,
+   "fail": "PC went down (bugcheck 0x133); isolated re-test at +510 took the PC down again"
+  },
+  "1050": {
+   "base_mhz": 2850,
+   "max_pass_mhz": 3300,
+   "first_fail_mhz": 3330,
+   "offset_pass": 450,
+   "offset_fail": 480,
+   "fail": "driver hang, then bugcheck 0x133"
+  },
+  "1100": {
+   "base_mhz": 2947,
+   "max_pass_mhz": 3382,
+   "first_fail_mhz": null,
+   "offset_pass": 435,
+   "fail": "none: 3397 not reached (voltage ceiling), light load, live clock 3322 to 3352"
+  },
+  "1125": {
+   "base_mhz": 2992,
+   "max_pass_mhz": null,
+   "first_fail_mhz": null,
+   "fail": "none: 3412 not reached, median 1115 mV"
+  },
+  "1150": {
+   "base_mhz": 3037,
+   "max_pass_mhz": null,
+   "first_fail_mhz": null,
+   "fail": "never used: the card holds at most 1.120 V"
+  },
+  "1200": {
+   "base_mhz": 3120,
+   "max_pass_mhz": null,
+   "first_fail_mhz": null,
+   "fail": "never used: the card holds at most 1.120 V"
+  }
+ },
+ "corrections": "an earlier crash-resume bug recorded 950 mV as 3015 and 900 mV as 2482; the right values are 3030 and 2497",
+ "steps": "vf-steps.csv"
+}

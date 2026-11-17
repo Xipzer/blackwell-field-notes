@@ -1,0 +1,88 @@
+{
+ "name": "curve candidate 1",
+ "rule": "per-point offset = clean limit minus 45 MHz (3 bins), interpolated between tested points; below 880 mV +300 (untested); 1125 mV uses the 1100 mV limit (the top is voltage limited, no edge found)",
+ "clean_limits_offset_mhz": {
+  "900": 495,
+  "950": 495,
+  "1000": 480,
+  "1050": 450,
+  "1100": 435
+ },
+ "margin_mhz": 45,
+ "points": [
+  {
+   "mv": 875,
+   "base_mhz": 1657,
+   "offset_mhz": 300,
+   "clock_mhz": 1957
+  },
+  {
+   "mv": 900,
+   "base_mhz": 2002,
+   "offset_mhz": 450,
+   "clock_mhz": 2452
+  },
+  {
+   "mv": 925,
+   "base_mhz": 2347,
+   "offset_mhz": 450,
+   "clock_mhz": 2797
+  },
+  {
+   "mv": 950,
+   "base_mhz": 2535,
+   "offset_mhz": 450,
+   "clock_mhz": 2985
+  },
+  {
+   "mv": 975,
+   "base_mhz": 2625,
+   "offset_mhz": 450,
+   "clock_mhz": 3075
+  },
+  {
+   "mv": 1000,
+   "base_mhz": 2715,
+   "offset_mhz": 435,
+   "clock_mhz": 3150
+  },
+  {
+   "mv": 1025,
+   "base_mhz": 2797,
+   "offset_mhz": 420,
+   "clock_mhz": 3217
+  },
+  {
+   "mv": 1050,
+   "base_mhz": 2850,
+   "offset_mhz": 405,
+   "clock_mhz": 3255
+  },
+  {
+   "mv": 1075,
+   "base_mhz": 2902,
+   "offset_mhz": 390,
+   "clock_mhz": 3292
+  },
+  {
+   "mv": 1100,
+   "base_mhz": 2947,
+   "offset_mhz": 390,
+   "clock_mhz": 3337
+  },
+  {
+   "mv": 1125,
+   "base_mhz": 2992,
+   "offset_mhz": 390,
+   "clock_mhz": 3382
+  }
+ ],
+ "memory_offset_mhz": 3000,
+ "power_limit_pct": 104,
+ "clock_cap": "nvidia-smi -lgc 210,3330",
+ "validation": {
+  "steel_nomad": "15,678 (median core 3052 MHz, max 3150, 47 C)",
+  "stress_test": "pending",
+  "hot_loop_45c": "pending"
+ }
+}
