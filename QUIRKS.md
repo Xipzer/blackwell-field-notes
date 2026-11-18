@@ -264,6 +264,18 @@ XBAR is fed by MSVDD and ran at 0.81 x the core clock at +0 (2,415 / 2,992). Res
 0.90 x core; +300 gave 2,707 / 2,977 = 0.91, so +300 is about as far as it goes here. A 12-run and an 11-run series with
 +300 were clean (Q18). OEM 0 against OEM 3 made no fps difference (153.7 / 154.4 against 153.9 / 153.6 / 154.5).
 
+**In true borderless fullscreen (measured, 18 Nov 18:14 to 18:27, final Profile 1, ReBAR forced, Q23):**
+
+| XBAR offset | XBAR under load | GT2 fps |
+|---|---|---|
+| +300 | 2,647 MHz | 175.4 to 175.9 (3 runs) |
+| +400 | 2,737 MHz | 176.6 (1 run) |
+| +500 | 2,775 MHz | 176.6, then 176.4, 176.9, 176.5 (3 of 3 clean) |
+
+From +400 to +500 the crossbar clock barely moved (about 0.9 x the core clock, the ratio ceiling) and fps did not
+change. We set +400 as the daily value, below the ceiling with the same fps, through a logon task that runs
+`MSIAfterburner.exe /wpXBARCLK_off,400` after Afterburner has started.
+
 **Gotcha.** The XBAR offset is not stored in a profile here: a driver reset or a restart clears it, so re-apply it
 with the curve after every reset.
 
@@ -338,8 +350,13 @@ Reading:
 - MSVDD shows a -50 mV offset, which fits NVIDIA's MSVDD change from driver 572.60 (Vix Editor changelog). With
   the 1,100 mV MSVDD floor image loaded, HWiNFO still read MSVDD at 1.07 to 1.09 V under load (Q8), so the floor
   did not lift MSVDD to 1.10 V. Why is open.
-- SPEEDO is a per-chip speed fuse; 2109 sits in the lower half of the range shown. We have no public table of
-  5090 SPEEDO values to compare with.
+- SPEEDO is a per-chip speed fuse; 2109 sits about a third of the way into the range shown
+  ((2109 - 2019) / (2285 - 2019) = 0.34). We have no public table of 5090 SPEEDO values to compare with. The
+  heavy-load wall we found (about 3,090 MHz in GT2, Q18) is in line with the 3.1 to 3.15 GHz that owners commonly
+  report as game-stable (estimate from scattered owner posts, for example
+  https://www.overclock.net/threads/revisited-rtx-5090-msi-vanguard-soc-le-aorus-master-vbios-comparison-stock-vs-2-undervolts-vs-overclock-on-4-synthetics-and-3-games.1815273
+  and the review roundup at https://shattered.io/rtx-5090-overclocking-guide), so this looks like an ordinary
+  chip, not a weak one.
 
 ---
 
@@ -354,28 +371,32 @@ Re-apply profile, memory offset, `nvidia-smi -lgc` cap and `/wpXBARCLK_off` afte
 4101 works for the cap). A memory clock reading of 14,001 MHz after a reset (stock) tells you the offset is gone.
 
 <a id="q18"></a>
-### Q18. Hangs need margin under a heavy fed load; caps and power limits do not add it
+### Q18. The GT2 hang is a heavy-load clock wall; a soft cap in the curve fixed it
 
-Everything here is Time Spy Extreme Graphics Test 2, direct launches. Until 18 Nov 16:23 every one ran in a window
-(Q1), so these are lighter loads than fullscreen and the margins are lower bounds.
+Everything here is Time Spy Extreme Graphics Test 2, direct launches. Until 18 Nov 16:23 every run was in a window
+(Q1); everything from 16:29 on is true borderless fullscreen. Full narrative: README section 8.
 
-- **Signature.** A heavy scene at 3,082 to 3,142 MHz and 1,000 to 1,045 mV, 550 to 600 W; power then collapses to
-  about 120 to 155 W while usage stays 100 %; the clock jumps to the top of the curve because power fell; the
-  driver resets seconds later. The jump is a symptom, not the cause. See the README, section 4.
-- **Caps only slide along the curve.** Caps at 3,060 and 3,090 MHz passed windowed at 600 W, then hung with
-  `is_windowed: false` at 700 W (3,060 cap: real 2,932 MHz at 960 mV). A cap moves the operating point to a lower
-  voltage point with the same lack of margin.
-- **Power limit is a ceiling, not a load.** GT2 drew about 460 to 610 W; raising the limit from 600 to 700 W changes
-  nothing unless the card was at the limit.
-- **Uniform shifts (whole curve lower at every voltage, `is_windowed: false`, 700 W):** minus 30 MHz hung on run 6
-  of 12; minus 45 clean 12 of 12; minus 60 clean 12 of 12; minus 45 with XBAR +300 clean 12 of 12 (median 158.5
-  fps).
-- **Per-band refinement** (offsets per voltage band relative to Profile 1, XBAR +300, one band at a time, 3 runs a
-  step): hangs at 1,035 mV / 3,105 MHz, 1,015 / 3,052, 1,010 / 3,075 and 1,020 / 3,082. Result "P1 v1":
-  up to 980 mV +15, 981 to 1,005 mV -30, 1,006 to 1,030 mV -75, 1,031 to 1,060 mV -45. Confirmed 11 of 11 in the
-  window. The 1,006 to 1,030 mV band is the weak one on this chip.
-- **Re-test in borderless fullscreen:** the per-band screen restarted at 16:27 with the fixed harness; results
-  pending.
+- **Signature.** A heavy scene at about 3,045 to 3,150 MHz and 1,000 to 1,045 mV, 550 to 600 W; power then
+  collapses to about 120 to 155 W while usage stays 100 %; the clock jumps to the top of the curve because power
+  fell; the driver resets seconds later. The jump is a symptom, not the cause.
+- **In the window (before 16:23):** uniform shifts of minus 45 and minus 60 MHz and a per-band curve ("P1 v1")
+  ran clean 12 of 12 and 11 of 11; `-lgc` caps at 3,060 and 3,090 hung. None of that carried over to fullscreen.
+- **In fullscreen, per-band offsets were a dead end.** Lowering the 1,006 to 1,030 mV band from -60 to -120 MHz
+  (-135 was next) never stopped the hangs. They kept landing at 3,045 to 3,090 MHz while the voltage read at the
+  hang rose with each step (1,000, 1,010, 1,015, 1,020 mV): lowering one band only moved the same clocks to a
+  higher voltage point. On the way we found a method flaw (Q25).
+- **What worked: a soft cap.** The Profile 1 curve with every point up to 1,060 mV held flat at a cap, points
+  above untouched. Ladder, 3 runs each: 3,045, 3,060, 3,075 and 3,090 MHz clean; 3,105 hung on run 2 at 1,020 mV /
+  3,090 MHz. Final pass: cap 3,090 = 6 clean, 1 hang in 7 (Profile 1, at the edge); cap 3,075 = 6 of 6
+  (Profile 2). Same fps as without a cap, about 173 in GT2.
+- **Why it is different from an `-lgc` cap (estimate).** An `-lgc` cap clips every point, the top too, and those
+  caps hung in the window (one at 2,932 MHz and 960 mV). The soft cap leaves the curve above 1,060 mV alone, so in
+  light moments the card still runs above 3,100 MHz at higher voltage: in the final Profile 1 runs, 5 % of the
+  heavy samples (usage at least 95 %, over 300 W) were above 3,100 MHz at about 1.02 V and 536 W, the rest at
+  about 3,064 MHz, 1.015 V and 570 W. Our reading: a clock wall under the heaviest load, plus a flat stretch that
+  keeps the driver from hopping between V/F points during load transients. Not proven.
+- **Power limit is a ceiling, not a load.** GT2 drew about 460 to 610 W; raising the limit from 600 to 700 W
+  changes nothing unless the card was at the limit.
 
 <a id="q19"></a>
 ### Q19. Run counts and what they can prove
@@ -428,6 +449,64 @@ temperature bins and never runs the clock it was given); FurMark load steps, a C
 - **`pkill -f PATTERN` can kill your own shell** when the pattern is in that shell's command line.
 - **Check the GPU is idle** before any unattended test (`nvidia-smi --query-gpu=utilization.gpu,power.draw`).
 
+<a id="q23"></a>
+### Q23. Forcing Resizable BAR for 3DMark Time Spy: +1.2 % in GT2
+
+**Source.** ReBAR on in the BIOS is not enough on NVIDIA cards: the driver enables it per application through its
+profile database, and 3DMark Time Spy is not on the list. NVIDIA Profile Inspector (NPI) can force it per profile;
+results vary per game, so test each and do not set it globally:
+- https://nvprofileinspector.com/rebar/
+- https://www.xda-developers.com/nvidia-disabling-resizable-bar-in-games-even-though-bios-says-its-on
+- https://babeltechreviews.com/z390-resizable-bar-performance/
+
+**What we did (measured, 18 Nov 18:04 to 18:12).** In NPI, profile "3DMark TimeSpy" (`3dmarktimespy.exe`),
+`rBAR - Enable` (0x000F00BA) = 1, size limit left empty, applied with `nvidiaProfileInspector.exe -silentImport`.
+Final Profile 1, XBAR +300, borderless fullscreen:
+
+| State | GT2 fps |
+|---|---|
+| driver default | 173.5, 173.0 |
+| ReBAR forced | 175.5, 175.3 |
+| off again (control) | 173.1 |
+
++1.2 % (173.3 to 175.4 on average). Profile 1 with ReBAR forced then ran 3 of 3 clean at 175.4 to 175.9, so the
+extra load did not show a new hang. Driver updates can reset NPI settings; check after each one.
+
+<a id="q24"></a>
+### Q24. One GPU in the system: Afterburner drops the `GPU1 ` prefix
+
+**What we saw (measured).** With the iGPU disabled (Q2), Afterburner's monitoring sources in its shared memory and
+in `Sources=` (`Profiles\MSIAfterburner.cfg`) lost their `GPU1 ` prefix: `Core clock`, `GPU voltage`, `Power`,
+`GPU usage`, `GPU temperature`, `Crossbar clock`, `System clock`, `Aux voltage`, `Memory clock`. Note the core
+voltage is `GPU voltage`, not `Voltage`. A logger keyed on `GPU1 voltage` wrote empty columns without any error.
+
+**Remedy.** Look up the `GPU1 ` name first and fall back to the plain name (the autopilot's `tools/mahmlog.ps1` and
+`tools/mahm1.ps1` do), and tick any newly named graph in Afterburner's Monitoring tab so it is published. Start a
+new logger in a separate PowerShell call from the one that stops the old one; doing both in one call left the new
+logger hung without writing.
+
+Nothing public found.
+
+<a id="q25"></a>
+### Q25. Per-band offsets can make the curve non-monotonic
+
+**What we saw (measured, 18 Nov 16:29 to 17:00).** With per-band offsets relative to Profile 1, raising a lower
+band while lowering the band above it (981 to 1,005 mV at +30, 1,006 to 1,030 at -60) put lower-voltage points
+above higher ones (for example 1,000 mV at about 3,150 MHz against 1,010 mV at 3,067). The driver then picks
+clocks that do not follow the bands, and a hang gets blamed on the wrong band.
+
+**Remedy.** After applying band offsets, cap every point at the lowest clock of any higher-voltage point (a suffix
+minimum), so the curve never falls as voltage rises. The autopilot's `abcurve.monotonic()` does this. With the fix
+the per-band search still did not converge (Q18), but its results became readable.
+
+<a id="q26"></a>
+### Q26. The voltage read at a hang sits about 10 mV under the V/F point in use
+
+**What we saw (measured).** In the 100 ms Afterburner log, the voltage of the last heavy sample before a hang read
+about 10 mV under the V/F point the card was running under load. So a hang read at 1,020 mV near a band boundary
+can belong to the band above. Attribute such hangs with that in mind, or better, avoid band attribution and test
+whole curve shapes (Q18).
+
 ---
 
 ## Clean measurement checklist
@@ -445,6 +524,7 @@ Before you trust a number from a GPU stability or fps test:
 6. **One harness at a time**, nothing else using the GPU (Q20).
 7. **Same session for comparisons.** Alternate A and B within one session; do not compare fps across restarts or
    desktop changes.
-8. **Count runs** (Q19), and log at 100 ms with Afterburner `HwPollPeriod=100` (Q11) and a logger that survives
+8. **Same driver profile state**: ReBAR forced or not for the benchmark (Q23) and the XBAR offset applied (Q10).
+9. **Count runs** (Q19), and log at 100 ms with Afterburner `HwPollPeriod=100` (Q11) and a logger that survives
    an Afterburner restart (Q12).
-9. **Record the state with each result**: water temperature, VBIOS image, driver, display mode, monitors.
+10. **Record the state with each result**: water temperature, VBIOS image, driver, display mode, monitors.

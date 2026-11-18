@@ -3,15 +3,40 @@
 Field notes from tuning one water-cooled RTX 5090 Founders Edition over two days (17 and 18 Nov 2026): what we
 tried, what broke, the numbers, and what we still do not understand.
 
-**Status (18 Nov 2026, 16:30 UTC):** the max curve passes everyday use and stress tests when warm, but hangs at
-random in one heavy scene of 3DMark Time Spy Extreme Graphics Test 2. Lowering the whole curve 45 or 60 MHz at every
-voltage stopped it (12 of 12 runs each), and a per-voltage-band version ("P1 v1") passed 11 of 11. **But** at 16:23
-UTC we confirmed that our automated 3DMark launches had never been fullscreen: they silently ran in a 3840x2160
-window spread over several monitors, a lighter load (about 141 fps against 172 in GT2). The fix
-(`is_borderless: true` plus a native-size swapchain) works on every run, and the per-band search is being repeated
-with it. Every hang rate measured before the fix ran in that window and understates the load. On the way we also found that
-a monitor on the Intel iGPU cost about 5.5 % in GT2 and that HWiNFO hid it. See [section 7](#7-18-nov-afternoon-display-mode-igpu-and-xbar-measured)
-and [QUIRKS.md](QUIRKS.md).
+**Status (18 Nov 2026, 18:30 UTC): done.** Two final profiles are saved and tested in real borderless fullscreen.
+The fix for the random Time Spy Extreme GT2 hang was not more margin per voltage but a **soft cap in the curve**:
+the max curve with every point up to 1,060 mV held flat at 3,090 MHz (Profile 1) or 3,075 MHz (Profile 2), and the
+points above left alone. It costs no fps. Forcing Resizable BAR for 3DMark and raising the crossbar clock added
+about 2 % on top. GT2 went from about 153 fps (old harness, window across monitors) to 176.6 fps. Summary below,
+the full story in [section 8](#8-18-nov-evening-the-final-profiles-and-how-we-got-there).
+
+## Final profiles
+
+| | Profile 1 (max) | Profile 2 (one step down) |
+|---|---|---|
+| Curve | Profile 1 max curve, every point at or under 1,060 mV held to **3,090 MHz**; points above 1,060 mV untouched (up to 3,247 MHz) | the same, held to **3,075 MHz** |
+| Afterburner slot | 1 and Startup | 2 |
+| Power / memory | 700 W (VBIOS override, 121 %), memory +3000 | same |
+| GT2 runs (borderless fullscreen) | 6 clean, 1 hang in 7: **at the edge** | **6 of 6 clean** |
+| GT2 fps, XBAR +300, ReBAR default | 172.8 to 173.4 | 171.9 to 173.4 |
+| GT2 fps, ReBAR forced, XBAR +300 | 175.4, 175.9, 175.9 (3 of 3 clean) | not run |
+| GT2 fps, ReBAR forced, XBAR +400 / +500 | 176.6 / 176.4 to 176.9 (1 and 3 runs, clean) | not run |
+
+Applies to both:
+
+- **Test state**: Time Spy Extreme GT2 direct launch in true borderless fullscreen (`is_windowed: false`,
+  `is_borderless: true`, swapchain 1920x1080). About 172 to 173 fps there against about 141 in the fallback window
+  (Q1). Nothing measured in the fallback window carries over.
+- **Resizable BAR forced for 3DMark** with NVIDIA Profile Inspector on the driver's "3DMark TimeSpy" profile:
+  `rBAR - Enable` (0x000F00BA) = 1, size limit left empty. 173.0 and 173.5 fps before, 175.3 and 175.5 forced,
+  173.1 with it off again: +1.2 % (Q23).
+- **Crossbar clock (XBAR) +400** through a logon task (`MSIAfterburner.exe /wpXBARCLK_off,400`), since the offset
+  is not stored in a profile and is lost at every driver reset (Q10, Q17).
+- **6 clean runs prove little**: they only rule out hang rates above about 39 % (Q19). Profile 1 hung once in 7, so
+  it sits on the edge; Profile 2 is the one to fall back to if anything hangs in daily use.
+
+Data: [data/final-profiles.json](data/final-profiles.json) (clock per voltage point for both),
+[data/tse-trials.csv](data/tse-trials.csv) (every run).
 
 Test your own card. Do not copy our numbers. Every chip, board and loop is different.
 
@@ -33,19 +58,23 @@ Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QU
 | [Q7](QUIRKS.md#q7) | HWiNFO INI keys (`SensorsSM`, `oneAPI`, `PresentMon`, `NvmlSupport`) | table | |
 | [Q8](QUIRKS.md#q8) | Effective, XBAR, SYS clocks and limit flags under GT2 | table | |
 | [Q9](QUIRKS.md#q9) | "Performance Limit - Utilization" = GPU not fully busy | use as a load check | yes (HWiNFO author) |
-| [Q10](QUIRKS.md#q10) | Afterburner Beta 5 "out of warranty" mode (`OEM=3`), `/wpXBARCLK_off,300` = 2,707 MHz XBAR, +2.6 % fps | re-apply after every driver reset | yes (VideoCardz, TweakTown) |
+| [Q10](QUIRKS.md#q10) | Afterburner Beta 5 "out of warranty" mode (`OEM=3`), `/wpXBARCLK_off,N`: +300 = +2.6 % in the window; in fullscreen +400 (2,737 MHz) = 176.6 fps, ceiling about 0.9 x core | logon task with +400; re-apply after every driver reset | yes (VideoCardz, TweakTown) |
 | [Q11](QUIRKS.md#q11) | Global settings live in `Profiles\MSIAfterburner.cfg`; `HwPollPeriod` defaults to 1000 ms | edit that file; 100 ms while logging | |
 | [Q12](QUIRKS.md#q12) | Afterburner shared memory goes stale after an Afterburner restart | logger checks signature and timestamp, reopens | none found |
 | [Q13](QUIRKS.md#q13) | `[Startup]` rewritten when the UI applies settings | check it after UI use | |
 | [Q14](QUIRKS.md#q14) | Voltage slider and `NVVDD_off_Vrel` ignored on driver 621.x | mVolt+ with `runtime_voltage_offsets=1` (untested here) | yes (Vix Editor) |
 | [Q15](QUIRKS.md#q15) | RTSS error popup after installing Afterburner Beta 5 | reinstall RTSS | similar (Guru3D) |
-| [Q16](QUIRKS.md#q16) | `MAKEREPORT`: SPEEDO 2109, NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV with -50 mV | read-only diagnostics | yes (VideoCardz describes the report) |
+| [Q16](QUIRKS.md#q16) | `MAKEREPORT`: SPEEDO 2109 (about a third into its fuse range), NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV with -50 mV | read-only diagnostics | yes (VideoCardz describes the report) |
 | [Q17](QUIRKS.md#q17) | Driver reset wipes curve, memory offset, cap and XBAR offset | re-apply after event 4101 | |
-| [Q18](QUIRKS.md#q18) | Hangs need curve margin under heavy load; caps and power limits do not add it | lower the curve (whole or per band) | |
+| [Q18](QUIRKS.md#q18) | GT2 hangs at a heavy-load clock wall (3,045 to 3,090 MHz) whatever the voltage; per-band margin and `-lgc` caps did not stop it | soft cap in the curve: points up to 1,060 mV flat at 3,090 / 3,075 MHz, top untouched | owner reports of 3.1 to 3.15 GHz game-stable |
 | [Q19](QUIRKS.md#q19) | 8 runs prove little: 16 clean = under 17 %, 60 clean = under 5 % | 1 / 3 / 10 to 12 run method | yes (rule of three) |
 | [Q20](QUIRKS.md#q20) | Two harnesses at once: about 90 fps, invalid | one chain at a time | |
 | [Q21](QUIRKS.md#q21) | CUDA, FurMark, OCCT, Steel Nomad do not find the GT2 limit | test with a real 3D load at the hang clocks | |
 | [Q22](QUIRKS.md#q22) | `-lgc F,F` does not hold, LUID changes per boot, displays must stay awake, locked drives | see the page | |
+| [Q23](QUIRKS.md#q23) | Resizable BAR is not used by 3DMark Time Spy on its own; forcing it gave +1.2 % in GT2 | NVIDIA Profile Inspector, 3DMark TimeSpy profile, `rBAR - Enable` (0x000F00BA) = 1 | yes (NPI rBAR settings, forums) |
+| [Q24](QUIRKS.md#q24) | With one GPU in the system, Afterburner drops the `GPU1 ` prefix from monitoring names (core voltage = `GPU voltage`) | logger looks up both names | none found |
+| [Q25](QUIRKS.md#q25) | Per-band offsets can make the curve non-monotonic and pin hangs on the wrong band | cap each point at the lowest clock above it (suffix minimum) | |
+| [Q26](QUIRKS.md#q26) | The voltage read at a hang sits about 10 mV under the V/F point in use | attribute hangs near a band edge to the band above | |
 
 Before trusting any number, run the [clean measurement checklist](QUIRKS.md#clean-measurement-checklist).
 
@@ -63,7 +92,7 @@ Labels:
 | CPU / board | i9-14900KS, ASRock Z790I Lightning WiFi (see raptor-lake-field-notes) |
 | OS / driver | Windows 11, NVIDIA driver 621.24 |
 | Monitors | Samsung Odyssey Neo G9 5120x1440 240 Hz (DSC), Dell AW2521H 1080p 360 Hz, ASUS XG258Q 1080p 240 Hz, BenQ XL2420Z 1080p 144 Hz; until 18 Nov 15:44 UTC the BenQ was on the Intel iGPU, since then all four are on the 5090 and the iGPU is off |
-| Tools | MSI Afterburner 4.6.7 Beta 2 (Beta 5 build 19412 from 18 Nov) with RTSS 7.3.7, HWiNFO64 8.61 (free), PresentMon 2.6.0, nvidia-smi, 3DMark (Time Spy Extreme, Steel Nomad), FurMark 2.11, OCCT 17.1.12, our CUDA checks, nvflash 5.867 (read only), Vix Editor 0.1.45, Vix Loader 0.5.0 |
+| Tools | MSI Afterburner 4.6.7 Beta 2 (Beta 5 build 19412 from 18 Nov) with RTSS 7.3.7, HWiNFO64 8.61 (free), PresentMon 2.6.0, nvidia-smi, 3DMark (Time Spy Extreme, Steel Nomad), FurMark 2.11, OCCT 17.1.12, our CUDA checks, nvflash 5.867 (read only), Vix Editor 0.1.45, Vix Loader 0.5.0, NVIDIA Profile Inspector (ReBAR) |
 | Cooling | GPU core about 18 to 20 C over water at 600 to 700 W; water 22 to 36 C during the tests |
 
 ## Summary: what works and what does not
@@ -81,7 +110,11 @@ Labels:
 | Clock caps 3,060 and 3,090 MHz (700 W, `is_windowed: false`) | **both hang** (run 9 and run 4 of 12) |
 | Whole curve minus 30 MHz (700 W, `is_windowed: false`) | hang on run 6 of 12 |
 | Whole curve minus 45 or minus 60 MHz (700 W, `is_windowed: false`) | **12 of 12 clean** each; minus 45 with XBAR +300 also 12 of 12 |
-| Per voltage band ("P1 v1": up to 980 mV +15, 981 to 1,005 -30, 1,006 to 1,030 -75, 1,031 to 1,060 -45 vs Profile 1, XBAR +300) | 11 of 11 clean in the window; being re-tested in borderless fullscreen |
+| Per voltage band ("P1 v1": up to 980 mV +15, 981 to 1,005 -30, 1,006 to 1,030 -75, 1,031 to 1,060 -45 vs Profile 1, XBAR +300) | 11 of 11 clean in the window |
+| Per voltage band again, in borderless fullscreen (1,006 to 1,030 mV band from -60 down to -120) | **never stopped the hangs**: always at 3,045 to 3,090 MHz, the voltage rising with each step |
+| **Soft cap in the curve: points up to 1,060 mV flat at 3,090 / 3,075 MHz, top untouched (borderless fullscreen)** | **6 clean, 1 hang in 7 / 6 of 6 clean**, no fps cost: the final profiles |
+| Resizable BAR forced for 3DMark (NVIDIA Profile Inspector) | GT2 +1.2 % (173.3 to 175.4 fps), 3 of 3 clean |
+| XBAR +400 / +500 in borderless fullscreen | 176.6 fps either way (+300: 175.7); +500 3 of 3 clean |
 | All "fullscreen" runs above | **ran in a 3840x2160 window** after all (Q1); lighter than fullscreen, so margins are lower bounds |
 | Crossbar clock +300 MHz (Afterburner out of warranty mode) | XBAR 2,415 to 2,707 MHz, GT2 +2.6 %, no extra hangs |
 | Intel iGPU off, all monitors on the 5090 | GT2 about 5.5 % faster in the window test (Q2) |
@@ -180,10 +213,10 @@ at a steady 3,127 to 3,135 MHz with memory +3000, about 2 % above ours at simila
 - ComputerBase, Steel Nomad results: https://www.computerbase.de/artikel/grafikkarten/3dmark-steel-nomad-benchmark.88643
 - Hardwareluxx Steel Nomad leaderboard: https://www.hardwareluxx.de/community/threads/3dmark-steel-nomad-rangliste.1353763
 
-**Profile 2 (in progress):** first planned as Profile 1 flattened at about 3,090 MHz, to keep heavy scenes under
-a "hang zone". The re-tests of 18 Nov showed there is no such zone (section 4). Candidates: Profile 1 shifted 45 or
-60 MHz lower at every voltage (12 of 12 each), or the per-band "P1 v1" (11 of 11), all measured in the fallback
-window (Q1). The choice waits for the borderless fullscreen re-test.
+**Final (18 Nov evening):** the daily Profile 1 is this curve with every point up to 1,060 mV held flat at
+3,090 MHz, and Profile 2 the same at 3,075 MHz; see [Final profiles](#final-profiles) and section 8. The idea of
+flattening at about 3,090 MHz came up early on 18 Nov, was dropped when `-lgc` caps hung in the window, and came
+back as a curve shape in true fullscreen.
 
 Full curve: [data/profile1-curve.json](data/profile1-curve.json).
 
@@ -302,11 +335,9 @@ fails.
 
 ### What we run now
 
-The owner chose the unrestricted Profile 1 for daily use and accepts the cold-start risk. Nothing new has been
-saved to the daily profile yet. The candidates for a stable daily curve (whole curve 45 or 60 MHz lower, or P1 v1)
-are being re-screened in borderless fullscreen with the 1 / 3 / 10 to 12 run method (Q19).
-
-Caps were the earlier safer option. They passed windowed at 600 W but hung with `is_windowed: false` at 700 W, so we no longer count them as a fix:
+Superseded by the [final profiles](#final-profiles): a soft cap written into the curve itself (section 8), not a
+clock lock. The `-lgc` caps below passed windowed at 600 W but hung with `is_windowed: false` at 700 W; we keep
+the notes for reference:
 
 - A static cap: `nvidia-smi -lgc 210,3090` (needs admin; a logon task and a task on event 4101 re-apply it, since
   a reboot or a driver reset clears it).
@@ -446,13 +477,113 @@ step, relative to Profile 1:
 | 1,031 to 1,060 mV | -45 | |
 
 Confirmation: 11 of 11 clean, 158.7 to 160.0 fps. The 1,006 to 1,030 mV band needs the most margin on this chip.
-All in the fallback window; the same search is running again in borderless fullscreen.
+All in the fallback window. Repeated in borderless fullscreen, the per-band search did not converge (section 8).
 
 ### Voltage instead of clock
 
 Afterburner's voltage controls do nothing on driver 621.x (Q14). Moving the P1 v1 curve 25 and 50 mV up the voltage
 axis (same clocks, more voltage) ran clean once each at 1.04 and 1.06 V median and 463 and 516 W, in the fallback
 window: not enough to say anything.
+
+## 8. 18 Nov evening: the final profiles and how we got there
+
+### The only valid test state
+
+From 16:27 UTC every run used the fixed harness: `is_windowed: false`, `is_borderless: true`, swapchain 1920x1080,
+which gave a borderless window exactly covering the 1080p display (`0,0 to 1920,1080`, style `0x94000000`) on every
+run. GT2 ran about 172 to 173 fps there against about 141 in the fallback window. Everything before is a lighter
+load and its hang rates do not carry over (Q1).
+
+### Per-band offsets: a dead end
+
+We repeated the per-band search (offsets relative to Profile 1 for four bands: up to 980 mV, 981 to 1,005, 1,006
+to 1,030 and 1,031 to 1,060 mV; XBAR +300; 1 run per screening step):
+
+| Step | Result |
+|---|---|
+| up to 980 mV, -45 to +0 | all clean, 171.6 to 172.6 fps: settled at +0 |
+| 981 to 1,005 mV, -45 to +30 | clean, 172.4 to 173.2; +45 hung: settled at +30 |
+| 1,006 to 1,030 mV at -45 | hung: kept at -60 |
+| 1,031 to 1,060 mV, -45 and -30 | clean; -15 hung: settled at -30 |
+| reliability, 1,006 to 1,030 at -60, then -75 | hung at 1,010 mV / 3,067 MHz, then 1,010 mV / 3,090 MHz |
+
+Here we found a method flaw (Q25): +30 on the 981 to 1,005 mV band against -60 or -75 on the band above made the
+curve fall as voltage rose, so the driver no longer followed the bands and hangs were pinned on the wrong band.
+The second pass capped every point at the lowest clock above it (suffix minimum) and started over:
+
+| Offsets (up to 980 / 981 to 1,005 / 1,006 to 1,030 / 1,031 to 1,060 mV) | Result |
+|---|---|
+| 0 / -60 / -75 / -15 to +15 | clean; +30 on the top band hung at 1,015 mV / 3,082 MHz |
+| 0 / -60 / -90 / +15 | 2 clean, then hung at 1,000 mV / 3,045 MHz |
+| 0 / -75 / -90 / +15 | hung at 1,010 mV / 3,090 MHz |
+| 0 / -75 / -105 / +15 | 2 clean, then hung (no reading) |
+| 0 / -75 / -120 / +15 | 1 clean, then hung at 815 mV / 2,655 MHz |
+| -15 / -75 / -120 / +15 | 1 clean, then hung at 1,020 mV / 3,090 MHz |
+
+Lowering the 1,006 to 1,030 mV band from -60 to -120 MHz never stopped the hangs. They kept landing at 3,045 to
+3,090 MHz, and the voltage read at the hang rose step by step (1,000, 1,010, 1,015, 1,020 mV): each cut only moved
+the same clocks to a higher-voltage point. That pointed at a clock limit under heavy load, not a per-voltage
+margin. (The voltage read at a hang sits about 10 mV under the V/F point in use, Q26.) One hang read 815 mV /
+2,655 MHz, far from the others; we did not find out why.
+
+### The soft cap
+
+So we tested a clock wall directly: the Profile 1 curve with every point up to 1,060 mV held to at most W MHz
+(flat from where the curve first reaches W), and every point above 1,060 mV untouched, so light loads still reach
+3,247 MHz at higher voltage. Monotonic by construction. 3 runs per step:
+
+| W (MHz) | Result | GT2 fps |
+|---|---|---|
+| 3,045 | clean 3 of 3 | 172.7 to 173.5 |
+| 3,060 | clean 3 of 3 | 173.0 to 173.4 |
+| 3,075 | clean 3 of 3 | 172.9 to 173.3 |
+| 3,090 | clean 3 of 3 | 172.8 to 173.4 |
+| 3,105 | run 1 173.5, run 2 hung at 1,020 mV / 3,090 MHz | |
+
+Final pass: cap 3,090 hung once (1,020 mV / 3,082 MHz on the first run), then ran 3 clean (172.9 to 173.3);
+cap 3,075 ran 3 of 3 clean (171.9 to 173.4). Totals: **cap 3,090 = 6 clean, 1 hang in 7 (Profile 1, the max,
+at the edge); cap 3,075 = 6 of 6 (Profile 2)**. Both saved to Afterburner (slot 1 and Startup, slot 2), the
+original Profile 1 curve archived.
+
+No fps cost: about 173 fps in GT2 with or without the cap. Telemetry from the final Profile 1 runs (100 ms, samples
+with usage at least 95 % and over 300 W): 95 % at about 3,064 MHz, 1.015 V, 570 W; 5 % above 3,100 MHz (about
+3,107) at about 1.02 V and 536 W. Reading (estimate): the heaviest scenes hit a clock wall near 3,090 MHz on this
+chip whatever the voltage, and the flat stretch also keeps the driver from hopping between V/F points during load
+transients; light moments still run above 3,100 MHz at higher voltage, which is where the curve above 1,060 mV
+earns its keep. Why the earlier `-lgc` caps hung while the soft cap holds is not proven; the obvious differences
+are the untouched top of the curve and the test state (window then, fullscreen now).
+
+### Resizable BAR and the crossbar clock
+
+| Change (final Profile 1, borderless fullscreen) | GT2 fps |
+|---|---|
+| ReBAR driver default, XBAR +300 | 173.5, 173.0 |
+| ReBAR forced (NPI, `rBAR - Enable` 0x000F00BA = 1) | 175.5, 175.3 |
+| ReBAR off again (control) | 173.1 |
+| ReBAR forced, 3 reliability runs | 175.9, 175.9, 175.4 |
+| + XBAR +400 (2,737 MHz) | 176.6 |
+| + XBAR +500 (2,775 MHz, about 0.9 x core, the ceiling) | 176.6, 176.4, 176.9, 176.5 |
+
+ReBAR stays forced for 3DMark (Q23); XBAR +400 is applied by a logon task (Q10).
+
+### From start to finish
+
+| State | GT2 fps |
+|---|---|
+| Profile 1, old harness (fallback window across monitors, one on the iGPU) | about 153 |
+| borderless fullscreen, iGPU off | about 172 to 173 |
+| + soft cap (stable) | about 173 |
+| + ReBAR forced | 175.4 to 175.9 |
+| + XBAR +400 | **176.6** |
+
+The first jump is a measurement fix, not a speed-up the card gained: the old harness rendered a lighter load.
+The real gains on top of a correct measurement are ReBAR (+1.2 %) and XBAR (+0.5 % from +300 to +400, +2.6 % from
++0 to +300 in the window).
+
+### Silicon
+
+SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about 3,090 MHz is in line with the
+3.1 to 3.15 GHz owners commonly report as game-stable for this card (estimate), so this is an ordinary chip.
 
 ## Open questions
 
@@ -466,8 +597,8 @@ window: not enough to say anything.
    149. We did not find out why; the hang results look the same in both states. After section 7 a display or
    adapter state is the first suspect, but we did not check the window then.
 5. Does the hang happen in games? Not known yet; the plan is to watch nvlddmkm and 4101 events for one to two weeks.
-6. Which curve is stable in real (borderless) fullscreen? Minus 45, minus 60 and P1 v1 passed only in the fallback
-   window. Re-test running.
+6. Why does a soft cap hold where `-lgc` caps and per-band margin did not? Our reading is a clock wall plus fewer
+   V/F point hops (section 8); it is not proven. Is the wall at the same clock in games?
 7. Why does exclusive fullscreen (`is_borderless: false`) hold only for the first run after a boot?
 8. Why did a 600 W setting with a 3,060 cap (2 runs with `is_windowed: false`) run about 110 MHz lower than the same cap at 700 W,
    while drawing only about 460 W? Not yet explained.
@@ -499,6 +630,10 @@ window: not enough to say anything.
     changed how much.
 16. **When fps moves but clocks do not, look outside the GPU** (display path, compositor, other adapters) before
     chasing memory, clock stretching or monitoring overhead.
+17. **When hangs land on the same clock whatever the voltage, it is a clock wall.** Per-band margin only moves the
+    same clock to a higher voltage. Cap the clock in the curve and leave the top alone.
+18. **Keep the curve monotonic** when editing parts of it, or the driver will not do what the bands say (Q25).
+19. **Check the driver profile too.** Resizable BAR on in the BIOS did not mean 3DMark used it (Q23).
 
 ## What we got wrong
 
@@ -517,6 +652,8 @@ window: not enough to say anything.
 - **"True fullscreen is harsher"** (18 Nov 15:49). It rested on one hang 27 s into the first run with a 1080p
   swapchain, whose window we never saw. Unproven.
 - **"This chip's REL is about 1,070 mV."** That is MSVDD's Vrel; NVVDD's is 1,120 mV (Q16).
+- **"Hangs need margin at every voltage; caps do not add it."** True for `-lgc` caps in the window, wrong as a rule:
+  in fullscreen, per-band margin never stopped the hangs, and a soft cap written into the curve did (section 8).
 - **The fps "states" as a GPU effect.** We tested memory offset, stock curve, Afterburner monitoring, out of warranty
   mode, XBAR, CPU idle and thread placement before finding the display path (section 7).
 
@@ -528,7 +665,8 @@ window: not enough to say anything.
 | [data/vf-3d.json](data/vf-3d.json) | FurMark per-voltage search, lock and real clocks |
 | [data/curve-history.csv](data/curve-history.csv) | every curve candidate and its Time Spy or Steel Nomad result |
 | [data/curve-candidate-1.json](data/curve-candidate-1.json) | the first curve (compute limits minus 45 MHz), historical |
-| [data/profile1-curve.json](data/profile1-curve.json) | the max curve, offset per point |
+| [data/profile1-curve.json](data/profile1-curve.json) | the max curve, offset per point (the base of both final profiles) |
+| [data/final-profiles.json](data/final-profiles.json) | the final Profile 1 and Profile 2: clock per voltage point, settings, results |
 | [data/tse-trials.csv](data/tse-trials.csv) | every automated GT2 run: setup, power, VBIOS, cap, result, and `display_mode` (what the window really was, where known; most runs before 18 Nov 16:23 were in a window) |
 | [data/hang-events.csv](data/hang-events.csv) | hang signatures found in the 100 ms telemetry |
 | [data/vbios-override.json](data/vbios-override.json) | VBIOS fields changed and what each did |
