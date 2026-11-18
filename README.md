@@ -7,8 +7,9 @@ tried, what broke, the numbers, and what we still do not understand.
 The fix for the random Time Spy Extreme GT2 hang was not more margin per voltage but a **soft cap in the curve**:
 the max curve with every point up to 1,060 mV held flat at 3,090 MHz (Profile 1) or 3,075 MHz (Profile 2), and the
 points above left alone. It costs no fps. Forcing Resizable BAR for 3DMark and raising the crossbar clock added
-about 2 % on top. GT2 went from about 153 fps (old harness, window across monitors) to 176.6 fps. Summary below,
-the full story in [section 8](#8-18-nov-evening-the-final-profiles-and-how-we-got-there).
+about 2 % on top. GT2 went from about 153 fps (old harness, window across monitors) to 176.6 fps. Validated Time
+Spy Extreme: **24,961 overall, 29,265 graphics** (rank 92 of about 3,270 for the same CPU and GPU, see
+[Results](#results)). Summary below, the full story in [section 8](#8-18-nov-evening-the-final-profiles-and-how-we-got-there).
 
 ## Final profiles
 
@@ -39,6 +40,46 @@ Data: [data/final-profiles.json](data/final-profiles.json) (clock per voltage po
 [data/tse-trials.csv](data/tse-trials.csv) (every run).
 
 Test your own card. Do not copy our numbers. Every chip, board and loop is different.
+
+## Results
+
+Validated 3DMark Time Spy Extreme, official app run with a valid result (green check), 18 Nov 2026, Profile 1
+(measured):
+
+| | Score |
+|---|---|
+| Overall | **24,961** |
+| Graphics | **29,265** |
+| CPU | 13,615 |
+| 3DMark average for the same CPU and GPU | 22,702 (overall) |
+
+Setup for that run: Profile 1 (the original max curve soft-capped flat at 3,090 MHz for every point at or under
+1,060 mV, 3,247 MHz above), XBAR +400 (logon task), Resizable BAR forced on the driver's 3DMark TimeSpy profile,
+700 W through the runtime VBIOS override (no flash), memory +3000, all monitors on the 5090, iGPU disabled, CPU 57x
+all-core at a fixed 1.320 V and DDR5-8400 with tuned timings (the daily settings from raptor-lake-field-notes). It is
+the daily profile: water-cooled, no hardware mods, no chilled water.
+
+Progression (measured):
+
+| | Before | After |
+|---|---|---|
+| TSE graphics score | 28,223 (old max curve, hangs at random in GT2) | 29,265 (soft-capped curve, stable): **+3.7 %** |
+| GT2 fps, our harness | about 153 (old harness: a window across monitors, BenQ on the iGPU) | 176.6 (borderless fullscreen, all monitors on the 5090, ReBAR forced, XBAR +400) |
+
+The fps step is not a clean like-for-like gain: most of it is the harness and display fixes (Q1, Q2), the rest is
+ReBAR (+1.2 %) and XBAR. The score step is like-for-like (both are app runs).
+
+### How this compares
+
+3DMark's search for i9-14900KS + RTX 5090, sorted by overall score (about 3,270 results), put this run at
+**rank 92, about the top 3 %** (measured, 18 Nov). The overall score is about 10 % above the 3DMark average for the
+same hardware.
+
+Ranks 1 to 7 are extreme-overclocking team entries: GPU core 3,457 to 3,547 MHz, memory 2,250 MHz, CPU 6.2 to
+6.4 GHz, overall 27,448 to 29,081, graphics 31,737 to 34,078. These are extreme-overclocking setups (XOC firmware,
+external voltage control, chilled water) built for single benchmark passes. Their graphics scores are 8 to 16 %
+above ours; ours comes from an unmodified card on a profile that is stable for daily use. The list is sorted by overall score, which includes the CPU, so the rank by graphics score alone would be
+higher; we did not measure it.
 
 The tools used here are in [blackwell-overclock-autopilot](https://github.com/Xipzer/blackwell-overclock-autopilot).
 The CPU and RAM side of the same machine is in [raptor-lake-field-notes](https://github.com/Xipzer/raptor-lake-field-notes).

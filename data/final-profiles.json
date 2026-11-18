@@ -57,7 +57,18 @@
    "1110": 3247
   },
   "result": "6 clean, 1 hang in 7 GT2 runs (3 clean in the cap ladder, then a hang at 1020 mV / 3082 MHz on the first final run, then 3 clean): at the edge; the max profile",
-  "gt2_fps": "172.8 to 173.4 (XBAR +300, ReBAR default); 175.4 to 175.9 with ReBAR forced, 3 of 3 clean; 176.6 with XBAR +400"
+  "gt2_fps": "172.8 to 173.4 (XBAR +300, ReBAR default); 175.4 to 175.9 with ReBAR forced, 3 of 3 clean; 176.6 with XBAR +400",
+  "validated_tse": {
+   "date": "2026-11-18",
+   "run": "3DMark app, valid result",
+   "overall": 24961,
+   "graphics": 29265,
+   "cpu": 13615,
+   "previous_best_graphics_old_curve": 28223,
+   "same_hardware_average_overall": 22702,
+   "leaderboard": "rank 92 of about 3,270 (i9-14900KS + RTX 5090, sorted by overall)",
+   "settings": "XBAR +400, ReBAR forced (3DMark TimeSpy profile), 700 W override, memory +3000, all monitors on the 5090, iGPU off"
+  }
  },
  "profile_2": {
   "slot": "Afterburner slot 2",
