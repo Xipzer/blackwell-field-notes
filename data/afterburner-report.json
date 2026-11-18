@@ -1,0 +1,39 @@
+{
+ "source": "MSI Afterburner 4.6.7 Beta 5 build 19412, out of warranty mode, MSIAfterburner.exe /wpMAKEREPORT,8,<file>",
+ "taken_utc": "2026-11-18 10:11, 10:18 and 10:25 (three reports, identical in the parts below)",
+ "card": "RTX 5090 Founders Edition, VBIOS 98.02.2E.00.03, driver 621.24",
+ "vbios_override_loaded": "700 W image with NVVDD/MSVDD REL ceilings 1150 mV and MSVDD REL floor 1100 mV",
+ "binning": {
+  "speedo": 2109,
+  "speedo_fuse_range_shown": [2018.94, 2284.87],
+  "oc_bin": 0,
+  "iddq_nvvdd": 42300,
+  "iddq_msvdd": 14050
+ },
+ "voltage_rails_mv": {
+  "NVVDD": {"at_report": 800, "vmin": 800, "vrel": 1120, "vop": 1140, "vov": 1200, "offsets": [0, 0, 0, 0]},
+  "MSVDD": {"at_report": 870, "vmin": 870, "vrel": 1070, "vop": 1140, "vov": 1200, "offsets": [0, -50, 0, 0]}
+ },
+ "clock_domains_idle_mhz": {
+  "GPCCLK": 660, "XBARCLK": 1440, "MCLK": 17001, "SYSCLK": 1200, "MSDCLK": 1042, "PWRCLK": 1605,
+  "PCIEGENCLK": "gen 5", "DISPCLK": 1026, "HUBCLK": 1080
+ },
+ "clock_propagation": [
+  "XBARCLK -> SYSCLK, MSDCLK, PWRCLK, HUBCLK, DISPCLK (MSVDD)",
+  "MCLK -> PCIEGENCLK, XBARCLK, SYSCLK, MSDCLK (MSVDD)",
+  "GPCCLK -> XBARCLK (several ratio relations)"
+ ],
+ "vf_relations": {
+  "GPCCLK": "NVVDD, points 0 to 126, up to 3450 MHz",
+  "XBARCLK": "MSVDD, points 127 to 253, up to 3450 MHz",
+  "MSDCLK": "MSVDD, up to 3450 MHz",
+  "SYSCLK": "MSVDD, up to 3300 MHz",
+  "PWRCLK": "MSVDD, up to 3450 MHz"
+ },
+ "notes": [
+  "MCLK 17001 MHz is the +3000 memory offset applied at the time.",
+  "The highest core voltage measured under load on this card was 1.115 to 1.120 V, matching NVVDD vrel.",
+  "The -50 mV MSVDD offset fits the MSVDD change NVIDIA made from driver 572.60 (Vix Editor changelog).",
+  "HWiNFO read MSVDD at 1.07 to 1.09 V under GT2 load with the 1100 mV MSVDD floor image loaded."
+ ]
+}

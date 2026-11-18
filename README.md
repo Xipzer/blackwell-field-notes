@@ -3,17 +3,51 @@
 Field notes from tuning one water-cooled RTX 5090 Founders Edition over two days (17 and 18 Nov 2026): what we
 tried, what broke, the numbers, and what we still do not understand.
 
-**Status (18 Nov 2026, 10:30 UTC):** the max curve passes everyday use and stress tests when warm, but hangs at
-random in one heavy scene of 3DMark Time Spy Extreme Graphics Test 2. On 18 Nov we found that every automated hang
-rate before 09:00 UTC had been measured with 3DMark in a window, not fullscreen. Re-tested fullscreen, clock caps
-did not stop the hang, and lowering the whole curve by 60 MHz at every voltage did (12 of 12 clean). A 45 MHz shift
-and a 60-run validation of the 60 MHz shift are pending. See [section 4](#4-the-time-spy-extreme-gt2-hang-measured)
-and [What we got wrong](#what-we-got-wrong).
+**Status (18 Nov 2026, 16:30 UTC):** the max curve passes everyday use and stress tests when warm, but hangs at
+random in one heavy scene of 3DMark Time Spy Extreme Graphics Test 2. Lowering the whole curve 45 or 60 MHz at every
+voltage stopped it (12 of 12 runs each), and a per-voltage-band version ("P1 v1") passed 11 of 11. **But** at 16:23
+UTC we confirmed that our automated 3DMark launches had never been fullscreen: they silently ran in a 3840x2160
+window spread over several monitors, a lighter load (about 141 fps against 172 in GT2). The fix
+(`is_borderless: true` plus a native-size swapchain) works on every run, and the per-band search is being repeated
+with it. Every hang rate measured before the fix ran in that window and understates the load. On the way we also found that
+a monitor on the Intel iGPU cost about 5.5 % in GT2 and that HWiNFO hid it. See [section 7](#7-18-nov-afternoon-display-mode-igpu-and-xbar-measured)
+and [QUIRKS.md](QUIRKS.md).
 
 Test your own card. Do not copy our numbers. Every chip, board and loop is different.
 
 The tools used here are in [blackwell-overclock-autopilot](https://github.com/Xipzer/blackwell-overclock-autopilot).
 The CPU and RAM side of the same machine is in [raptor-lake-field-notes](https://github.com/Xipzer/raptor-lake-field-notes).
+
+## Quirks index
+
+Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QUIRKS.md). Short version:
+
+| # | Quirk | Remedy | Public reports |
+|---|---|---|---|
+| [Q1](QUIRKS.md#q1) | Direct 3DMark launch runs in a 3840x2160 window across monitors, not fullscreen; exclusive fullscreen only on the first run after boot | `is_windowed: false` + `is_borderless: true` + `swapchain_resolution` = display size; check window style (`0x94000000` good, `0x14CF0000` windowed) | none found |
+| [Q2](QUIRKS.md#q2) | A monitor on the Intel iGPU costs about 5.5 % in GT2 (cross-adapter copy) | all monitors on the 5090; iGPU off in Windows and BIOS (`IGPU Multi-Monitor` = Disabled) | yes (Microsoft, forums) |
+| [Q3](QUIRKS.md#q3) | HWiNFO running hid that penalty (fps "states") | same as Q2 | none found |
+| [Q4](QUIRKS.md#q4) | "A DSC monitor takes two heads" did not stop 4 monitors (Neo G9 240 Hz DSC + three 1080p) on one 5090 | none needed; BenQ via HDMI-to-DP active adapter | NVIDIA KB (the limit), forum (Blackwell change) |
+| [Q5](QUIRKS.md#q5) | Old Intel iGPU driver 31.0.101.5592 crashes HWiNFO in `ze_intel_gpu64.dll`; Windows Update reinstalls it | remove the oem package + `ExcludeWUDriversInQualityUpdate=1`, or HWiNFO `oneAPI=0` | yes (HWiNFO forum) |
+| [Q6](QUIRKS.md#q6) | HWiNFO free cannot CSV-log from the command line; sensor indices move between restarts | read shared memory (`SensorsSM=1`), match values by name every poll | yes (HWiNFO, the Pro limit) |
+| [Q7](QUIRKS.md#q7) | HWiNFO INI keys (`SensorsSM`, `oneAPI`, `PresentMon`, `NvmlSupport`) | table | |
+| [Q8](QUIRKS.md#q8) | Effective, XBAR, SYS clocks and limit flags under GT2 | table | |
+| [Q9](QUIRKS.md#q9) | "Performance Limit - Utilization" = GPU not fully busy | use as a load check | yes (HWiNFO author) |
+| [Q10](QUIRKS.md#q10) | Afterburner Beta 5 "out of warranty" mode (`OEM=3`), `/wpXBARCLK_off,300` = 2,707 MHz XBAR, +2.6 % fps | re-apply after every driver reset | yes (VideoCardz, TweakTown) |
+| [Q11](QUIRKS.md#q11) | Global settings live in `Profiles\MSIAfterburner.cfg`; `HwPollPeriod` defaults to 1000 ms | edit that file; 100 ms while logging | |
+| [Q12](QUIRKS.md#q12) | Afterburner shared memory goes stale after an Afterburner restart | logger checks signature and timestamp, reopens | none found |
+| [Q13](QUIRKS.md#q13) | `[Startup]` rewritten when the UI applies settings | check it after UI use | |
+| [Q14](QUIRKS.md#q14) | Voltage slider and `NVVDD_off_Vrel` ignored on driver 621.x | mVolt+ with `runtime_voltage_offsets=1` (untested here) | yes (Vix Editor) |
+| [Q15](QUIRKS.md#q15) | RTSS error popup after installing Afterburner Beta 5 | reinstall RTSS | similar (Guru3D) |
+| [Q16](QUIRKS.md#q16) | `MAKEREPORT`: SPEEDO 2109, NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV with -50 mV | read-only diagnostics | yes (VideoCardz describes the report) |
+| [Q17](QUIRKS.md#q17) | Driver reset wipes curve, memory offset, cap and XBAR offset | re-apply after event 4101 | |
+| [Q18](QUIRKS.md#q18) | Hangs need curve margin under heavy load; caps and power limits do not add it | lower the curve (whole or per band) | |
+| [Q19](QUIRKS.md#q19) | 8 runs prove little: 16 clean = under 17 %, 60 clean = under 5 % | 1 / 3 / 10 to 12 run method | yes (rule of three) |
+| [Q20](QUIRKS.md#q20) | Two harnesses at once: about 90 fps, invalid | one chain at a time | |
+| [Q21](QUIRKS.md#q21) | CUDA, FurMark, OCCT, Steel Nomad do not find the GT2 limit | test with a real 3D load at the hang clocks | |
+| [Q22](QUIRKS.md#q22) | `-lgc F,F` does not hold, LUID changes per boot, displays must stay awake, locked drives | see the page | |
+
+Before trusting any number, run the [clean measurement checklist](QUIRKS.md#clean-measurement-checklist).
 
 Labels:
 
@@ -28,7 +62,8 @@ Labels:
 | GPU | RTX 5090 Founders Edition, VBIOS 98.02.2E.00.03, 600 W limit (700 W with the override below), PCIe 5.0 x16, water block in a custom loop shared with the CPU |
 | CPU / board | i9-14900KS, ASRock Z790I Lightning WiFi (see raptor-lake-field-notes) |
 | OS / driver | Windows 11, NVIDIA driver 621.24 |
-| Tools | MSI Afterburner 4.6.7 Beta 2 (Beta 5 from 18 Nov), nvidia-smi, 3DMark (Time Spy Extreme, Steel Nomad), FurMark 2.11, OCCT 17.1.12, our CUDA checks, nvflash 5.867 (read only), Vix Editor 0.1.45, Vix Loader 0.5.0 |
+| Monitors | Samsung Odyssey Neo G9 5120x1440 240 Hz (DSC), Dell AW2521H 1080p 360 Hz, ASUS XG258Q 1080p 240 Hz, BenQ XL2420Z 1080p 144 Hz; until 18 Nov 15:44 UTC the BenQ was on the Intel iGPU, since then all four are on the 5090 and the iGPU is off |
+| Tools | MSI Afterburner 4.6.7 Beta 2 (Beta 5 build 19412 from 18 Nov) with RTSS 7.3.7, HWiNFO64 8.61 (free), PresentMon 2.6.0, nvidia-smi, 3DMark (Time Spy Extreme, Steel Nomad), FurMark 2.11, OCCT 17.1.12, our CUDA checks, nvflash 5.867 (read only), Vix Editor 0.1.45, Vix Loader 0.5.0 |
 | Cooling | GPU core about 18 to 20 C over water at 600 to 700 W; water 22 to 36 C during the tests |
 
 ## Summary: what works and what does not
@@ -40,20 +75,28 @@ Labels:
 | Curve from the real clocks proven in 3D (Profile 1) | passes warm: 3 Time Spy Extreme runs, Steel Nomad Stress Test 99.2 % |
 | Profile 1 cold (water 22 to 27 C) | hangs at random in Time Spy Extreme GT2 |
 | Lowering the 1000 to 1025 mV points by 15 or 30 MHz | still hangs (both on run 2) |
-| Whole curve minus 30 MHz | 17 Nov: 7 clean runs, then most likely a hang on run 8; 18 Nov fullscreen: hang on run 6 of 12 |
+| Whole curve minus 30 MHz | 17 Nov: 7 clean runs, then most likely a hang on run 8; 18 Nov `is_windowed: false`: hang on run 6 of 12 |
 | Clock caps 3,202 and 3,232 MHz | no effect: heavy scenes never reach them |
 | Clock caps 3,060 and 3,090 MHz (600 W, windowed) | 13 of 13 cold runs clean, but measured windowed (a different load) |
-| Clock caps 3,060 and 3,090 MHz (700 W, fullscreen) | **both hang** (run 9 and run 4 of 12) |
-| Whole curve minus 60 MHz (700 W, fullscreen) | **12 of 12 clean**; minus 45 and a 60-run check pending |
+| Clock caps 3,060 and 3,090 MHz (700 W, `is_windowed: false`) | **both hang** (run 9 and run 4 of 12) |
+| Whole curve minus 30 MHz (700 W, `is_windowed: false`) | hang on run 6 of 12 |
+| Whole curve minus 45 or minus 60 MHz (700 W, `is_windowed: false`) | **12 of 12 clean** each; minus 45 with XBAR +300 also 12 of 12 |
+| Per voltage band ("P1 v1": up to 980 mV +15, 981 to 1,005 -30, 1,006 to 1,030 -75, 1,031 to 1,060 -45 vs Profile 1, XBAR +300) | 11 of 11 clean in the window; being re-tested in borderless fullscreen |
+| All "fullscreen" runs above | **ran in a 3840x2160 window** after all (Q1); lighter than fullscreen, so margins are lower bounds |
+| Crossbar clock +300 MHz (Afterburner out of warranty mode) | XBAR 2,415 to 2,707 MHz, GT2 +2.6 %, no extra hangs |
+| Intel iGPU off, all monitors on the 5090 | GT2 about 5.5 % faster in the window test (Q2) |
+| Borderless fullscreen harness (`is_borderless: true`, 1920x1080 swapchain) | fullscreen on every run, about 172 fps against 141 in the fallback window |
 | Memory +0 instead of +3000 | still hangs (hard freeze, windowed run 2) |
 | Clock caps 3,135 and 3,150 MHz (700 W) | hang (run 5 and run 1) |
 | Memory +2000 instead of +3000 | still hangs |
 | Fresh reboot (driver state reset) | still hangs |
 | 700 W VBIOS override | works (power.max_limit 700 W, best Time Spy Extreme graphics 28,223), but Time Spy peaks at about 592 W: power was not the limit |
 | Stock VBIOS at 600 W | still hangs (hard hang): the override is not the cause |
-| NVVDD and MSVDD REL ceiling 1,110 -> 1,150 mV | no effect: this chip's REL is about 1,070 mV |
+| NVVDD and MSVDD REL ceiling 1,110 -> 1,150 mV | no measurable effect (Afterburner's report shows NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV) |
 | MSVDD REL floor 1,100 mV | 4 hangs in 9 runs vs 5 in 8 without: not a fix |
-| Afterburner voltage slider | no effect on driver 621.01 and later, which ignores runtime voltage offsets (source: Vix Editor and mVolt+ documentation) |
+| Afterburner voltage slider, `/wpNVVDD_off_Vrel` | no effect on driver 621.01 and later, which ignores runtime voltage offsets (source: Vix Editor and mVolt+ documentation) |
+| Memory +0 to +3000 at a fixed cap | +1.4 % fps from +0 to +3000; no effect on the hang |
+| Afterburner open or closed, `OEM=0` or `3`, nvidia-smi logger, CPU spin, P-core pinning | no fps difference |
 | FurMark, FurMark load steps, a CUDA load ramp, OCCT 3D Adaptive, Steel Nomad Stress Test | none reproduce the hang |
 
 ## 1. Per-voltage search, compute (measured)
@@ -138,8 +181,9 @@ at a steady 3,127 to 3,135 MHz with memory +3000, about 2 % above ours at simila
 - Hardwareluxx Steel Nomad leaderboard: https://www.hardwareluxx.de/community/threads/3dmark-steel-nomad-rangliste.1353763
 
 **Profile 2 (in progress):** first planned as Profile 1 flattened at about 3,090 MHz, to keep heavy scenes under
-a "hang zone". The fullscreen re-tests of 18 Nov showed there is no such zone (section 4), so Profile 2 is now
-Profile 1 shifted 60 MHz lower at every voltage: 12 of 12 fullscreen GT2 runs clean, 60-run check pending.
+a "hang zone". The re-tests of 18 Nov showed there is no such zone (section 4). Candidates: Profile 1 shifted 45 or
+60 MHz lower at every voltage (12 of 12 each), or the per-band "P1 v1" (11 of 11), all measured in the fallback
+window (Q1). The choice waits for the borderless fullscreen re-test.
 
 Full curve: [data/profile1-curve.json](data/profile1-curve.json).
 
@@ -156,7 +200,7 @@ Every hang has the same shape in a 100 ms Afterburner log:
 4. A driver reset (event 4101; nvlddmkm event 14 "PF FLR"), or a full Windows freeze that needs a power cycle.
 
 Until 18 Nov our "100 ms" logs were really 1 s data repeated (section 6). With true 100 ms polling, one more step
-shows between 1 and 2: the readings freeze for a few samples. A fullscreen hang at 700 W with a 3,060 MHz cap:
+shows between 1 and 2: the readings freeze for a few samples. A hang at 700 W with a 3,060 MHz cap (`is_windowed: false`, fallback window):
 
 | Time (UTC) | Clock | Voltage | Power | Usage | Core | XBAR | SYS | Aux |
 |---|---|---|---|---|---|---|---|---|
@@ -199,17 +243,21 @@ three flagged lines are our own CUDA ramp test, marked as not a hang).
 | Profile 1, 700 W, MSVDD REL floor 1,100 mV | **4** (one hard freeze) | **9** |
 | Profile 1, 700 W, memory +0 | 1 (hard freeze) | 2 |
 
-The harness runs in the table above were all windowed. From 18 Nov 09:00 UTC, fullscreen, 700 W, memory +3000:
+The harness runs in the table above were all windowed (`is_windowed: true` in the copied workload). From 18 Nov
+09:00 UTC the harness asked for fullscreen (`is_windowed: false`), 700 W, memory +3000. We called these
+"fullscreen" at the time; they were not (Q1): 3DMark fell back to a 3840x2160 window spread over several monitors,
+one of them on the iGPU. Still a fair A/B within the table, but a lighter load than real fullscreen:
 
-| Change (fullscreen) | Hangs | Runs |
+| Change (`is_windowed: false`, fallback window) | Hangs | Runs |
 |---|---|---|
 | Profile 1 | **3** | **8** |
 | Cap 3,090 MHz | 1 | 4 (stops at the first hang) |
 | Cap 3,060 MHz | 1 | 9 (real 2,932 MHz at 960 mV, about 530 W, 47 C at the hang) |
 | Whole curve 30 MHz lower at every voltage, no cap | 1 | 6 |
 | Whole curve 60 MHz lower at every voltage, no cap | **0** | **12** |
-| Whole curve 45 MHz lower | pending | |
-| Whole curve 60 MHz lower, 60 runs in total | pending | |
+| Whole curve 45 MHz lower | **0** | **12** |
+| Whole curve 45 MHz lower, XBAR +300 | **0** | **12** |
+| Per band, P1 v1 (section 7) | 0 | 11 (4 hangs on the way to it) |
 
 VBIOS for these runs: the 700 W override. The image with the MSVDD REL floor was loaded at 08:09 and no unload was
 logged after it, so it was most likely still in place.
@@ -225,13 +273,13 @@ the curve or the cap moved. Lowering the whole curve costs about 1 fps (153.6 to
 ### Windowed vs fullscreen
 
 The workload file copied from a 3DMark run for the harness had `"is_windowed": true`, and the window spread over
-several monitors. That is a different load: Profile 1's GT2 ran about 149 fps windowed, 154 to 170 fps fullscreen.
-Every harness hang rate before 18 Nov 09:00 UTC was measured windowed. The autopilot's harness now forces
-`"is_windowed": false`.
+several monitors. Setting `"is_windowed": false` did not fix it: 3DMark went exclusive fullscreen only on the first
+run after a boot and otherwise fell back to an ordinary 3840x2160 window. What works on every run is
+`"is_windowed": false` with `"is_borderless": true` and `"swapchain_resolution"` set to the display's native size
+(Q1, section 7). Every harness hang rate before 18 Nov 16:23 UTC was measured in a window.
 
-Not explained yet: with the same settings, fullscreen GT2 scored about 155 fps in most sessions but 167 to 170 in
-two (09:05, and 09:21 to 09:25 UTC). Three later sessions with an Afterburner restart between them all scored
-153.6 to 156.0. Investigation pending.
+The fps "states" (about 155 in most sessions, 167 to 173 in some, 137 later) were the display setup, not the GPU:
+see section 7.
 
 ### Things that do not reproduce it
 
@@ -248,16 +296,17 @@ So only a real 3D workload that reaches the hang clocks finds it here.
 ### Direct launches are harsher than app runs
 
 The autopilot's harness starts GT2 directly (`3DMarkTimeSpy.exe --in <workload>`), back to back, with no demo,
-loading or CPU test in between. At 700 W, Profile 1 hung in 5 of 8 direct GT2 runs (windowed; 3 of 8 fullscreen)
+loading or CPU test in between. At 700 W, Profile 1 hung in 5 of 8 direct GT2 runs (windowed; 3 of 8 with `is_windowed: false`, also a window in the end)
 while full app runs passed. We use the harness to compare settings, not to predict how often a full run or a game
 fails.
 
 ### What we run now
 
-The owner chose the unrestricted Profile 1 for daily use and accepts the cold-start risk. The candidate for a
-stable daily curve is now Profile 1 shifted 60 MHz lower at every voltage, once its 60-run check is done.
+The owner chose the unrestricted Profile 1 for daily use and accepts the cold-start risk. Nothing new has been
+saved to the daily profile yet. The candidates for a stable daily curve (whole curve 45 or 60 MHz lower, or P1 v1)
+are being re-screened in borderless fullscreen with the 1 / 3 / 10 to 12 run method (Q19).
 
-Caps were the earlier safer option. They passed windowed but hung fullscreen, so we no longer count them as a fix:
+Caps were the earlier safer option. They passed windowed at 600 W but hung with `is_windowed: false` at 700 W, so we no longer count them as a fix:
 
 - A static cap: `nvidia-smi -lgc 210,3090` (needs admin; a logon task and a task on event 4101 re-apply it, since
   a reboot or a driver reset clears it).
@@ -286,8 +335,9 @@ What we did:
 | Edit | Result |
 |---|---|
 | Power limit 600 -> 700 W | works; Time Spy Extreme graphics 28,223, but Time Spy peaks at about 592 W: the curve and the hang set the score, not power |
-| NVVDD and MSVDD REL ceiling 1,110 -> 1,150 mV | no effect. The REL (reliability) voltage is computed per chip; on this card about 1,070 mV, under the old ceiling. The REL floor (`rel_equation_min`) is the field that raises it |
-| MSVDD REL floor 900 -> 1,100 mV | 4 hangs in 9 runs vs 5 in 8 without: not a fix (small samples) |
+| NVVDD and MSVDD REL ceiling 1,110 -> 1,150 mV | no measurable effect. The REL (reliability) voltage is computed per chip. Afterburner's extended report (Q16) shows NVVDD Vrel 1,120 mV and MSVDD Vrel 1,070 mV on this card; we had first written "about 1,070 mV" for the core, which mixed up the rails. The REL floor (`rel_equation_min`) is the field that raises it |
+| MSVDD REL floor 900 -> 1,100 mV | 4 hangs in 9 runs vs 5 in 8 without: not a fix (small samples). HWiNFO still read MSVDD at 1.07 to 1.09 V under load with it loaded |
+| `runtime_voltage_offsets` 0 -> 1 (on top of the image above) | loaded 18 Nov 15:03; lets mVolt+ apply voltage offsets again on 621.x. Not used yet |
 
 Background (source: the editor's documentation and changelog):
 
@@ -317,38 +367,92 @@ Data: [data/vbios-override.json](data/vbios-override.json).
 
 ## 6. Practical gotchas (measured)
 
-- **BitLocker:** after some restarts the second drive, with the 3DMark library, stayed locked. Every unattended
-  launch then "failed" without running. Check the test can start before counting results.
-- **The DXGI adapter LUID changes every boot.** 3DMark workload files name the GPU by it; a stale one makes 3DMark
-  refuse the launch, which looked like a hang on the first post-reboot test.
-- **Displays must stay awake.** 3DMark aborts with "window_focus_lost: Display resolution changed" if a display
-  sleeps. Dim them over DDC instead.
-- **`nvidia-smi -lgc F,F` (min = max) does not hold F on Blackwell** in heavy 3D: the card ran about 100 MHz under it.
-  Use `-lgc 210,CAP` as a ceiling only.
-- **A driver reset drops the curve, the memory offset and the clock cap.** A search step after a reset runs at stock
-  and looks like a pass; we now treat a voltage far over the target as "settings lost".
-- **Log at 100 ms.** nvidia-smi at 1 s and without voltage missed the event; Afterburner's shared memory at 100 ms,
-  flushed per line, survives a hard hang.
-- **Afterburner polls at 1 s by default.** `HwPollPeriod` defaults to 1000 ms, so our "100 ms" logs before 18 Nov
-  were 1 s data repeated ten times. Set `HwPollPeriod=100` in `Profiles\MSIAfterburner.cfg`: the global settings
-  live there, not in the `MSIAfterburner.cfg` next to the exe.
-- **An Afterburner restart freezes a running logger.** If Afterburner restarts while a logger holds
-  `MAHMSharedMemory` open, the new instance does not publish into it: the signature turns to `0xDEAD` or the
-  timestamp at offset 20 stops moving, and the logger writes the same values forever. Two whole series of
-  fullscreen runs on 18 Nov (including the 3,090 MHz cap hang) have no usable telemetry because of this. The
-  autopilot's `mahmlog.ps1` now checks both and reopens the mapping.
-- **More rails with the "out of warranty" option.** Afterburner 4.6.7 Beta 5 with voltage control set to "out of
-  warranty" (`OEM=3` in `Profiles\MSIAfterburner.cfg`) publishes the crossbar clock (XBAR), system clock and aux
-  voltage (MSVDD) too.
-- **Check the 3DMark workload's `is_windowed`.** A workload copied from a run can be windowed; ours was, across
-  several monitors, and every harness result before 18 Nov 09:00 UTC ran a different load from fullscreen.
-- **HWiNFO free cannot log from the command line.** Starting and stopping a log unattended needs HWiNFO Pro.
-- **`pkill -f PATTERN` can kill your own shell** when the pattern is also in that shell's command line.
-- **Check the GPU is idle before any test.** An unattended test once collided with a benchmark the owner was running.
+The full list, with remedies and public sources, is [QUIRKS.md](QUIRKS.md). The ones that cost us most:
+
+- **The benchmark was not running the way we thought** (Q1): a day of "fullscreen" hang rates ran in a window.
+- **A second display adapter changed the result** (Q2, Q3): a monitor on the iGPU cost about 5.5 %, and HWiNFO
+  running hid most of it, so fps jumped between "states".
+- **A driver reset drops the curve, memory offset, clock cap and XBAR offset** (Q17). A step after a reset runs at
+  stock and looks like a pass; we treat a voltage far over the target as "settings lost".
+- **Log at 100 ms, really** (Q11, Q12): Afterburner polls at 1 s by default, its global settings are in
+  `Profiles\MSIAfterburner.cfg`, and its shared memory goes stale if it restarts under a running logger.
+- **BitLocker, the DXGI LUID and sleeping displays** each made launches "fail" without running (Q22).
 - **Crash-once-per-boot theory** (source: Igor's Lab reports the Blackwell boost table can come back wrong after a
   driver reset until a reboot): tested, a fresh boot hung on run 1 too.
 - **GPU tuning crashes do not corrupt data** beyond files written in the last minute or two, like a power cut.
   chkdsk, sfc and a WSL disk check after the first crashes were all clean.
+
+## 7. 18 Nov afternoon: display mode, iGPU and XBAR (measured)
+
+### Where the fps "states" came from
+
+With the same curve, GT2 scored anywhere from 125 to 173 fps over the day. Core clocks under load were the same
+in every state; only the display setup changed. Curves differ between some rows, but within one state they moved
+fps by 2 % at most.
+
+| Display state during the run | GT2 fps |
+|---|---|
+| `is_windowed: true`, window across monitors (17 Nov, 600 W, Profile 1) | about 147 to 150 |
+| `is_windowed: false`, fallback 3840x2160 window, BenQ on the iGPU (most runs, 09:07 to 13:10) | 152.4 to 156.3 |
+| same, HWiNFO running (12:20 to 12:54) | 160.0 to 162.5 |
+| same window, iGPU disabled (BenQ dark), HWiNFO open or closed | 161.3 to 162.0 (165.7 with P1 v1 and XBAR +300) |
+| P1 v1, 15:10 to 15:27 (cause not found) | 136.5 to 137.8, back to 156.3 to 156.5 after a GPU device restart |
+| fallback window, all 4 monitors on the 5090, iGPU off (window read: 3856x2199, style `0x14CF0000`) | 125.0 just after the move, then 138.2 to 141.0 |
+| sessions that were never checked (09:05, 09:21 to 09:25, 12:11 to 12:16, 13:26 to 13:31, 15:08) | 165.5 to 173.3 |
+| exclusive fullscreen, 1920x1080 swapchain, first run after a boot | 172.5 |
+| **borderless fullscreen, 1920x1080 swapchain** (`0,0 to 1920,1080`, style `0x94000000`) | **171.8, 171.8, 172.0** |
+
+So: our harness fps only compare within one session and one desktop state, and the hang rates were measured on a
+load that rendered about 18 % fewer frames than fullscreen. In the fallback window PresentMon showed the GPU idle about 13 % of each
+frame and HWiNFO flagged "Performance Limit - Utilization" (Q9). The fixes are in Q1 and Q2; the checklist is at
+the end of [QUIRKS.md](QUIRKS.md#clean-measurement-checklist).
+
+### The iGPU penalty
+
+| State (Profile 1, cap 3,090, fallback window) | GT2 fps |
+|---|---|
+| BenQ on the iGPU, HWiNFO closed | 153.1, 152.7, 152.9, 152.8 |
+| BenQ on the iGPU, HWiNFO running | 162.5, 160.0, 160.9 |
+| iGPU disabled, HWiNFO closed | 161.3, 162.0, 161.6 |
+| iGPU disabled, HWiNFO running | 161.7, 161.5 |
+
+About 5.5 % for one desktop monitor on the Intel iGPU, hidden by HWiNFO's iGPU polling. All four monitors now run
+on the 5090, with the iGPU disabled in Windows and in the BIOS (Q2, Q3, Q4).
+
+### Crossbar clock (XBAR)
+
+Afterburner 4.6.7 Beta 5's out of warranty mode can offset the crossbar clock (`/wpXBARCLK_off,N`, Q10):
+
+| XBAR offset | XBAR under load | GT2 fps |
+|---|---|---|
+| +0 | 2,415 MHz (0.81 x core) | 153.7, 154.0 |
+| +100 | 2,505 MHz | 155.8 |
+| +200 | 2,602 MHz | 156.9 |
+| +300 | 2,707 MHz (0.91 x core) | 157.8 (+2.6 %) |
+
+One driver reset at +150, on a curve that hung anyway. A 12-run series (curve minus 45, XBAR +300) and the 11-run
+P1 v1 confirmation (XBAR +300) were clean. The offset is lost at every driver reset and restart.
+
+### Per voltage band ("P1 v1")
+
+Starting from the curve 45 MHz lower everywhere with XBAR +300, each band was moved in 15 MHz steps, 3 runs per
+step, relative to Profile 1:
+
+| Band | Settled at | Hangs on the way |
+|---|---|---|
+| up to 980 mV | +15 (not taken further) | none |
+| 981 to 1,005 mV | -30 | 1,035 mV / 3,105 MHz at -15 (landed in the band above, which was backed off too) |
+| 1,006 to 1,030 mV | -75 | 1,015 / 3,052 at -30; 1,010 / 3,075 while the band above was tried at -30; 1,020 / 3,082 in the first confirmation at -60 |
+| 1,031 to 1,060 mV | -45 | |
+
+Confirmation: 11 of 11 clean, 158.7 to 160.0 fps. The 1,006 to 1,030 mV band needs the most margin on this chip.
+All in the fallback window; the same search is running again in borderless fullscreen.
+
+### Voltage instead of clock
+
+Afterburner's voltage controls do nothing on driver 621.x (Q14). Moving the P1 v1 curve 25 and 50 mV up the voltage
+axis (same clocks, more voltage) ran clean once each at 1.04 and 1.06 V median and 463 and 516 W, in the fallback
+window: not enough to say anything.
 
 ## Open questions
 
@@ -359,13 +463,17 @@ Data: [data/vbios-override.json](data/vbios-override.json).
    to 49 C, and many cold runs were windowed harness runs.
 3. Would a higher NVVDD REL floor help? We raised only the MSVDD floor.
 4. After one reboot, direct GT2 launches ran at about 90 fps instead of 149, capped or not, then later went back to
-   149. We did not find out why; the hang results look the same in both states.
+   149. We did not find out why; the hang results look the same in both states. After section 7 a display or
+   adapter state is the first suspect, but we did not check the window then.
 5. Does the hang happen in games? Not known yet; the plan is to watch nvlddmkm and 4101 events for one to two weeks.
-6. Profile 2 (whole curve 60 MHz lower): 12 of 12 clean; the 60-run check and the 45 MHz shift are pending.
-7. Why did fullscreen GT2 score 167 to 170 fps in two windows of time and about 155 in every other session with the
-   same settings? Pending.
-8. Why did a 600 W setting with a 3,060 cap (2 fullscreen runs) run about 110 MHz lower than the same cap at 700 W,
+6. Which curve is stable in real (borderless) fullscreen? Minus 45, minus 60 and P1 v1 passed only in the fallback
+   window. Re-test running.
+7. Why does exclusive fullscreen (`is_borderless: false`) hold only for the first run after a boot?
+8. Why did a 600 W setting with a 3,060 cap (2 runs with `is_windowed: false`) run about 110 MHz lower than the same cap at 700 W,
    while drawing only about 460 W? Not yet explained.
+9. Why did the fallback window run slower with all four monitors on the 5090 (138 to 141 fps) than with one of them
+   on the iGPU (153 to 162)? Not explained; it no longer matters once the run is fullscreen.
+10. Why did the MSVDD REL floor of 1,100 mV leave MSVDD at 1.07 to 1.09 V under load (Q16)?
 
 ## Lessons
 
@@ -385,19 +493,32 @@ Data: [data/vbios-override.json](data/vbios-override.json).
 12. **Caps and power limits do not add margin.** They move the operating point along the same curve. Margin comes
     from lowering the curve.
 13. **Check the logger's real sample rate.** Repeated values every ten lines meant 1 s data, not 100 ms.
+14. **Check the window, not the setting.** `is_windowed: false` did not make the run fullscreen; reading the window
+    rectangle and style did tell us.
+15. **One display adapter while measuring.** A monitor on the iGPU changed fps by 5.5 %, and a monitoring tool
+    changed how much.
+16. **When fps moves but clocks do not, look outside the GPU** (display path, compositor, other adapters) before
+    chasing memory, clock stretching or monitoring overhead.
 
 ## What we got wrong
 
 - **A clock "hang zone" from about 3,000 MHz up.** Caps at 3,060 and 3,090 MHz looked like a fix (13 of 13 cold runs
-  at 600 W), but those runs were windowed. Fullscreen at 700 W both caps hung, the 3,060 cap at a real 2,932 MHz and
+  at 600 W), but those runs were windowed. With `is_windowed: false` at 700 W both caps hung, the 3,060 cap at a real 2,932 MHz and
   960 mV. The zone seemed to move with every curve or cap because there was none: the whole curve lacked 30 to 60
   MHz of margin, and a cap only slides along that curve.
-- **"700 W raises the hang rate."** The 600 W caps that looked clean were windowed, the 700 W caps that hung were
-  fullscreen. A power limit is a ceiling, and fullscreen GT2 drew about 460 to 560 W, under 700 W. Withdrawn until
-  600 W and 700 W are compared in the same mode.
+- **"700 W raises the hang rate."** The 600 W caps that looked clean were windowed, the 700 W caps that hung ran with
+  `is_windowed: false`. A power limit is a ceiling, and GT2 drew about 460 to 560 W there, under 700 W. Withdrawn
+  until 600 W and 700 W are compared in the same mode.
 - **The clock jump read as a light-load boost crash** (section 4): a symptom, as noted above.
 - **Memory +3000 as a suspect.** Memory +0 also hung (windowed, run 2, hard freeze), so memory is not the only cause.
 - **"100 ms" telemetry.** It was 1 s data until 18 Nov (section 6).
+- **"Fullscreen" from 18 Nov 09:00.** Setting `is_windowed: false` was not enough; those runs were in a 3840x2160
+  window (Q1). Labels in the data now say what the window really was, where known.
+- **"True fullscreen is harsher"** (18 Nov 15:49). It rested on one hang 27 s into the first run with a 1080p
+  swapchain, whose window we never saw. Unproven.
+- **"This chip's REL is about 1,070 mV."** That is MSVDD's Vrel; NVVDD's is 1,120 mV (Q16).
+- **The fps "states" as a GPU effect.** We tested memory offset, stock curve, Afterburner monitoring, out of warranty
+  mode, XBAR, CPU idle and thread placement before finding the display path (section 7).
 
 ## Data
 
@@ -408,9 +529,11 @@ Data: [data/vbios-override.json](data/vbios-override.json).
 | [data/curve-history.csv](data/curve-history.csv) | every curve candidate and its Time Spy or Steel Nomad result |
 | [data/curve-candidate-1.json](data/curve-candidate-1.json) | the first curve (compute limits minus 45 MHz), historical |
 | [data/profile1-curve.json](data/profile1-curve.json) | the max curve, offset per point |
-| [data/tse-trials.csv](data/tse-trials.csv) | every automated GT2 run: setup, power, VBIOS, cap, result (windowed unless the setup says fullscreen) |
+| [data/tse-trials.csv](data/tse-trials.csv) | every automated GT2 run: setup, power, VBIOS, cap, result, and `display_mode` (what the window really was, where known; most runs before 18 Nov 16:23 were in a window) |
 | [data/hang-events.csv](data/hang-events.csv) | hang signatures found in the 100 ms telemetry |
 | [data/vbios-override.json](data/vbios-override.json) | VBIOS fields changed and what each did |
+| [data/afterburner-report.json](data/afterburner-report.json) | the card's binning and rail limits from Afterburner's extended report |
+| [QUIRKS.md](QUIRKS.md) | every quirk, its remedy and public sources, and the clean measurement checklist |
 
 Times are UTC.
 

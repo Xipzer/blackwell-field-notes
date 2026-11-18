@@ -64,6 +64,19 @@
     ]
    },
    "bytes_changed": 230
+  },
+  {
+   "name": "700w-rvo",
+   "base": "700w-msvdd1100",
+   "changed_fields": {
+    "runtime_voltage_offsets": [
+     0,
+     1
+    ]
+   },
+   "bytes_changed_vs_base": 410,
+   "loaded": "2026-11-18 15:03 UTC (verified)",
+   "note": "lets a runtime tool (mVolt+) apply voltage offsets again on driver 621.x; not used yet"
   }
  ],
  "other_stock_values": {
@@ -76,8 +89,8 @@
   "power.max_limit": "700.00 W after the restart; 600.00 W again after unload and restart",
   "time_spy_extreme_peak_power_w": 592,
   "time_spy_extreme_graphics": 28223,
-  "rel_ceiling_1150": "no effect measured: the chip's NVVDD REL is about 1070 mV, under the stock 1110 mV ceiling",
-  "msvdd_floor_1100": "GT2 hang rate 4 of 9 (one hard freeze) vs 5 of 8 without; not a fix",
+  "rel_ceiling_1150": "no measurable effect. Afterburner's extended report (data/afterburner-report.json) shows NVVDD Vrel 1120 mV and MSVDD Vrel 1070 mV; an earlier note here said the chip's NVVDD REL was about 1070 mV, which mixed up the rails",
+  "msvdd_floor_1100": "GT2 hang rate 4 of 9 (one hard freeze) vs 5 of 8 without; not a fix. HWiNFO still read MSVDD at 1.07 to 1.09 V under load with it loaded",
   "stock_vbios_600w": "Profile 1 hard-hung on GT2 run 1: the override is not the cause of the hangs"
  }
 }
