@@ -68,7 +68,17 @@
    "same_hardware_average_overall": 22702,
    "leaderboard": "rank 92 of about 3,270 (i9-14900KS + RTX 5090, sorted by overall)",
    "settings": "XBAR +400, ReBAR forced (3DMark TimeSpy profile), 700 W override, memory +3000, all monitors on the 5090, iGPU off"
-  }
+  },
+  "top_ramp_mhz": 255,
+  "top_points_mhz_by_mv": {
+   "1070": 3247,
+   "1100": 3324,
+   "1125": 3387,
+   "1150": 3451,
+   "1170": 3502
+  },
+  "gt2_fps_with_voltage_top": "179.0 (1 run, clean, ReBAR forced, XBAR +400; screening)",
+  "clock_mhz_by_mv_note": "clock_mhz_by_mv is the curve before the voltage top (18 Nov 20:00 UTC); above 1070 mV the saved curve follows top_points_mhz_by_mv"
  },
  "profile_2": {
   "slot": "Afterburner slot 2",
@@ -119,7 +129,16 @@
    "1110": 3247
   },
   "result": "6 of 6 clean GT2 runs (3 in the cap ladder, 3 in the final pass)",
-  "gt2_fps": "171.9 to 173.4 (XBAR +300, ReBAR default)"
+  "gt2_fps": "171.9 to 173.4 (XBAR +300, ReBAR default)",
+  "top_ramp_mhz": 195,
+  "top_points_mhz_by_mv": {
+   "1070": 3247,
+   "1100": 3306,
+   "1125": 3354,
+   "1150": 3403,
+   "1170": 3442
+  },
+  "clock_mhz_by_mv_note": "clock_mhz_by_mv is the curve before the voltage top (18 Nov 20:00 UTC); above 1070 mV the saved curve follows top_points_mhz_by_mv"
  },
  "cap_ladder": {
   "3045": "3 of 3 clean, 172.7 to 173.5 fps",
@@ -128,5 +147,20 @@
   "3090": "3 of 3 clean, 172.8 to 173.4",
   "3105": "run 1 173.5 fps, run 2 hung at 1020 mV / 3090 MHz"
  },
- "statistics": "6 clean runs only rule out hang rates above about 39 % (95 %, one-sided); see QUIRKS.md Q19. Daily use will tell more."
+ "statistics": "6 clean runs only rule out hang rates above about 39 % (95 %, one-sided); see QUIRKS.md Q19. Daily use will tell more.",
+ "voltage_top": {
+  "added": "2026-11-18 20:00 UTC",
+  "vbios": "700 W override image with nvvdd_rel_equation_min_mv 1150 (core voltage limit 1170 mV)",
+  "rule": "top of the curve as a straight ramp from 3247 MHz at 1070 mV to 3247 + D at 1170 mV; points up to 1060 mV keep the soft cap",
+  "ladder_light_720p_gt1": {
+   "0": "clean, 3195 MHz max read at 1.06 V",
+   "+60": "clean, 3255",
+   "+105": "clean, 3277",
+   "+150": "clean, 3315",
+   "+195": "clean, 3345; reliability 3 of 3 clean (3337)",
+   "+255": "clean, 3382; reliability 3 of 3 clean (3360 to 3367)",
+   "+315": "hung, driver reset after 16 s at 3457 MHz / 1.145 V"
+  },
+  "note": "the 720p light test is CPU bound (about 275 to 278 fps), so clocks are the metric; game validation pending"
+ }
 }

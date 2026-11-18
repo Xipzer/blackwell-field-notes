@@ -316,9 +316,10 @@ reports success and nothing changes. The Vix Editor's `runtime_voltage_offsets=1
 
 **What we saw (measured).** Afterburner's voltage slider and the out-of-warranty `/wpNVVDD_off_Vrel` and
 `/wpMSVDD_off_Vrel` writes changed nothing on 621.24. We built an image with `runtime_voltage_offsets=1` (loaded
-and verified 18 Nov 15:03) but have not tried mVolt+ yet. To test "more voltage at the same clock" we moved the whole curve
-up the voltage axis instead (P1 v1 curve +25 and +50 mV): no hangs in one run each, but those runs were in the
-fallback window (Q1), so they decide nothing.
+and verified 18 Nov 15:03); mVolt+ offsets were still ignored on it (Q27). To test "more voltage at the same
+clock" we moved the whole curve up the voltage axis instead (P1 v1 curve +25 and +50 mV): no hangs in one run
+each, but those runs were in the fallback window (Q1), so they decide nothing. What did raise the voltage limit was
+a static image field, the NVVDD REL floor (Q27).
 
 <a id="q15"></a>
 ### Q15. RTSS needed a reinstall after installing Afterburner Beta 5
@@ -506,6 +507,26 @@ the per-band search still did not converge (Q18), but its results became readabl
 about 10 mV under the V/F point the card was running under load. So a hang read at 1,020 mV near a band boundary
 can belong to the band above. Attribute such hangs with that in mind, or better, avoid band attribution and test
 whole curve shapes (Q18).
+
+<a id="q27"></a>
+### Q27. mVolt+ runtime voltage offsets are ignored on driver 621.24; the NVVDD REL floor works
+
+**What we saw (measured, 18 Nov 19:20).** mVolt+ v0.50.13, `--nvvdd-offsets 0,25,25`, driver 621.24, with a
+Vix-loaded image that has `runtime_voltage_offsets=1` (Q14). The call returned `"success": true`, and the state it
+returned in the same reply said `"rail_offsets_ignored_by_driver": true`; `nvvdd_max_mv` stayed 1,120 and the
+NVVDD offsets read back as 0. So the hooks from `runtime_voltage_offsets=1` did not get the offsets through on
+this card and driver.
+
+**Remedy (measured).** Raise the limit in the image instead: Vix Editor, `nvvdd_rel_equation_min_mv` 900 -> 1,150
+(only that field changed, 101 bytes), load with the Vix Loader, restart. The REL voltage is computed per chip (here
+1,120 mV) and clamped by the REL equation floor (our reading of the field names, borne out by the result), so a
+floor above the computed value wins. After the restart mVolt+ `--status` read `nvvdd_max_mv` 1,170 (REL 1,150 plus
+the ALT +20 step), and the running image matched the stored one byte for byte. Under load the voltage tops out at
+about 1.135 V read (about 1.145 V set, the REL 1,150 limit); the ALT +20 is not used. Only light loads reach it:
+4K TSE GT1 at about 540 W stayed at or under 1.02 V. Results: README
+[Voltage lever](README.md#voltage-lever).
+
+Nothing public found on the offsets being ignored with `runtime_voltage_offsets=1` set.
 
 ---
 

@@ -76,7 +76,20 @@
    },
    "bytes_changed_vs_base": 410,
    "loaded": "2026-11-18 15:03 UTC (verified)",
-   "note": "lets a runtime tool (mVolt+) apply voltage offsets again on driver 621.x; not used yet"
+   "note": "meant to let a runtime tool (mVolt+) apply voltage offsets again on driver 621.x; mVolt+ v0.50.13 --nvvdd-offsets 0,25,25 on driver 621.24 returned success with rail_offsets_ignored_by_driver=true, nvvdd_max stayed 1120 mV (18 Nov 19:20 UTC)"
+  },
+  {
+   "name": "700w-rel1150",
+   "base": "700w-rvo",
+   "changed_fields": {
+    "nvvdd_rel_equation_min_mv": [
+     900,
+     1150
+    ]
+   },
+   "bytes_changed_vs_base": 101,
+   "loaded": "2026-11-18 19:20 UTC, applied at the next restart; running image verified byte for byte",
+   "note": "raises the NVVDD REL floor above the chip's computed Vrel (1120 mV); mVolt+ --status after the restart: nvvdd_max 1170 mV (REL 1150 + ALT 20). Under load the voltage tops out at about 1.135 V read (about 1.145 V set); light loads only"
   }
  ],
  "other_stock_values": {
@@ -91,6 +104,7 @@
   "time_spy_extreme_graphics": 28223,
   "rel_ceiling_1150": "no measurable effect. Afterburner's extended report (data/afterburner-report.json) shows NVVDD Vrel 1120 mV and MSVDD Vrel 1070 mV; an earlier note here said the chip's NVVDD REL was about 1070 mV, which mixed up the rails",
   "msvdd_floor_1100": "GT2 hang rate 4 of 9 (one hard freeze) vs 5 of 8 without; not a fix. HWiNFO still read MSVDD at 1.07 to 1.09 V under load with it loaded",
-  "stock_vbios_600w": "Profile 1 hard-hung on GT2 run 1: the override is not the cause of the hangs"
+  "stock_vbios_600w": "Profile 1 hard-hung on GT2 run 1: the override is not the cause of the hangs",
+  "nvvdd_rel_floor_1150": "core voltage limit 1120 -> 1170 mV; light 720p TSE GT1 3172-3195 MHz at 1.055-1.06 V before, up to 3360-3382 MHz at 1.135 V with the curve top ramped +255; 4K TSE GT1 (about 540 W) stays at or under 1.02 V, so heavy loads are unaffected"
  }
 }

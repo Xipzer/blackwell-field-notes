@@ -11,17 +11,27 @@ about 2 % on top. GT2 went from about 153 fps (old harness, window across monito
 Spy Extreme: **24,961 overall, 29,265 graphics** (rank 92 of about 3,270 for the same CPU and GPU, see
 [Results](#results)). Summary below, the full story in [section 8](#8-18-nov-evening-the-final-profiles-and-how-we-got-there).
 
+**Update (18 Nov, 19:20 to 20:02 UTC): voltage lever.** Raising the NVVDD REL floor in the VBIOS override image
+(one field, 900 -> 1,150 mV) lifted the core voltage limit from 1,120 to 1,170 mV, and a ramp on the top of the
+curve now lets light loads run 3,337 to 3,382 MHz instead of about 3,172 to 3,195. Heavy loads never reach that
+voltage, so the soft cap is unchanged. Both profiles are saved with the new top; see
+[Voltage lever](#voltage-lever). Runtime voltage offsets through mVolt+ did not work on this driver (Q27).
+
 ## Final profiles
 
 | | Profile 1 (max) | Profile 2 (one step down) |
 |---|---|---|
-| Curve | Profile 1 max curve, every point at or under 1,060 mV held to **3,090 MHz**; points above 1,060 mV untouched (up to 3,247 MHz) | the same, held to **3,075 MHz** |
+| Curve | Profile 1 max curve, every point at or under 1,060 mV held to **3,090 MHz**; 3,247 MHz at 1,070 mV | the same, held to **3,075 MHz** |
+| Top of the curve (since 20:00, [Voltage lever](#voltage-lever)) | ramp from 3,247 MHz at 1,070 mV to **+255** at 1,170 mV: 1,100 mV 3,324, 1,125 mV 3,387, 1,150 mV 3,451, 1,170 mV 3,502 | ramp to **+195**: 1,100 mV 3,306, 1,125 mV 3,354, 1,150 mV 3,403, 1,170 mV 3,442 |
+| Light-load top ramp (720p GT1) | +255: 4 of 4 clean, up to 3,360 to 3,382 MHz read | +195: 4 of 4 clean, up to 3,337 to 3,345 MHz read |
+| VBIOS image | 700 W override with the NVVDD REL floor at 1,150 mV (core voltage limit 1,170 mV) | same |
 | Afterburner slot | 1 and Startup | 2 |
 | Power / memory | 700 W (VBIOS override, 121 %), memory +3000 | same |
 | GT2 runs (borderless fullscreen) | 6 clean, 1 hang in 7: **at the edge** | **6 of 6 clean** |
 | GT2 fps, XBAR +300, ReBAR default | 172.8 to 173.4 | 171.9 to 173.4 |
 | GT2 fps, ReBAR forced, XBAR +300 | 175.4, 175.9, 175.9 (3 of 3 clean) | not run |
 | GT2 fps, ReBAR forced, XBAR +400 / +500 | 176.6 / 176.4 to 176.9 (1 and 3 runs, clean) | not run |
+| GT2 fps with the voltage top, ReBAR forced, XBAR +400 | **179.0** (1 run, clean; screening only) | not run |
 
 Applies to both:
 
@@ -68,6 +78,22 @@ Progression (measured):
 
 The fps step is not a clean like-for-like gain: most of it is the harness and display fixes (Q1, Q2), the rest is
 ReBAR (+1.2 %) and XBAR. The score step is like-for-like (both are app runs).
+
+Steel Nomad Stress Test, official app run, 18 Nov about 19:10 UTC, Profile 1 (cap 3,090) before the voltage lever,
+XBAR +400, the 700 W image with `runtime_voltage_offsets=1` (measured): **passed, 99.1 % frame rate stability**,
+20 loops, best loop 16,645, worst 16,492.
+
+After the voltage lever (measured, our harness, borderless fullscreen):
+
+| | Before | After |
+|---|---|---|
+| Core voltage limit (mVolt+ `--status`, `nvvdd_max`) | 1,120 mV | 1,170 mV |
+| Light load (TSE GT1 at 720p, about 250 W): clock read | 3,172 to 3,195 MHz at 1.055 to 1.06 V | 3,360 to 3,382 MHz at up to 1.135 V (Profile 1, top +255) |
+| TSE GT2 fps, Profile 1, ReBAR forced, XBAR +400 | 176.6 | 179.0 (1 run, screening) |
+
+The light-load test is CPU bound at 720p (about 275 to 278 fps whatever the clock), so the clock is the metric
+there, not fps. The GT2 gain comes from lighter moments inside GT2 now reaching higher clocks; one run, so treat it
+as a screening result. No validated app score with the voltage top yet, and no game testing yet.
 
 ### How this compares
 
@@ -124,7 +150,7 @@ Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QU
 | [Q11](QUIRKS.md#q11) | Global settings live in `Profiles\MSIAfterburner.cfg`; `HwPollPeriod` defaults to 1000 ms | edit that file; 100 ms while logging | |
 | [Q12](QUIRKS.md#q12) | Afterburner shared memory goes stale after an Afterburner restart | logger checks signature and timestamp, reopens | none found |
 | [Q13](QUIRKS.md#q13) | `[Startup]` rewritten when the UI applies settings | check it after UI use | |
-| [Q14](QUIRKS.md#q14) | Voltage slider and `NVVDD_off_Vrel` ignored on driver 621.x | mVolt+ with `runtime_voltage_offsets=1` (untested here) | yes (Vix Editor) |
+| [Q14](QUIRKS.md#q14) | Voltage slider and `NVVDD_off_Vrel` ignored on driver 621.x | none at runtime here (Q27); raise the NVVDD REL floor in the image instead | yes (Vix Editor) |
 | [Q15](QUIRKS.md#q15) | RTSS error popup after installing Afterburner Beta 5 | reinstall RTSS | similar (Guru3D) |
 | [Q16](QUIRKS.md#q16) | `MAKEREPORT`: SPEEDO 2109 (about a third into its fuse range), NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV with -50 mV | read-only diagnostics | yes (VideoCardz describes the report) |
 | [Q17](QUIRKS.md#q17) | Driver reset wipes curve, memory offset, cap and XBAR offset | re-apply after event 4101 | |
@@ -137,6 +163,7 @@ Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QU
 | [Q24](QUIRKS.md#q24) | With one GPU in the system, Afterburner drops the `GPU1 ` prefix from monitoring names (core voltage = `GPU voltage`) | logger looks up both names | none found |
 | [Q25](QUIRKS.md#q25) | Per-band offsets can make the curve non-monotonic and pin hangs on the wrong band | cap each point at the lowest clock above it (suffix minimum) | |
 | [Q26](QUIRKS.md#q26) | The voltage read at a hang sits about 10 mV under the V/F point in use | attribute hangs near a band edge to the band above | |
+| [Q27](QUIRKS.md#q27) | mVolt+ runtime NVVDD offsets on driver 621.24 report success but `rail_offsets_ignored_by_driver: true`, even with a `runtime_voltage_offsets=1` image; the core limit stays 1,120 mV | static route: VBIOS image `nvvdd_rel_equation_min_mv` 900 -> 1,150 (limit 1,170 mV after a restart) | none found |
 
 Before trusting any number, run the [clean measurement checklist](QUIRKS.md#clean-measurement-checklist).
 
@@ -190,6 +217,8 @@ Labels:
 | NVVDD and MSVDD REL ceiling 1,110 -> 1,150 mV | no measurable effect (Afterburner's report shows NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV) |
 | MSVDD REL floor 1,100 mV | 4 hangs in 9 runs vs 5 in 8 without: not a fix |
 | Afterburner voltage slider, `/wpNVVDD_off_Vrel` | no effect on driver 621.01 and later, which ignores runtime voltage offsets (source: Vix Editor and mVolt+ documentation) |
+| mVolt+ runtime NVVDD offsets (`--nvvdd-offsets 0,25,25`) on a `runtime_voltage_offsets=1` image | **ignored** on 621.24: success reported, `rail_offsets_ignored_by_driver: true`, limit stays 1,120 mV (Q27) |
+| **NVVDD REL floor 900 -> 1,150 mV in the image + a ramp on the curve top** | **core limit 1,120 -> 1,170 mV; light loads 3,337 to 3,382 MHz instead of about 3,180; heavy loads unchanged** ([Voltage lever](#voltage-lever)) |
 | Memory +0 to +3000 at a fixed cap | +1.4 % fps from +0 to +3000; no effect on the hang |
 | Afterburner open or closed, `OEM=0` or `3`, nvidia-smi logger, CPU spin, P-core pinning | no fps difference |
 | FurMark, FurMark load steps, a CUDA load ramp, OCCT 3D Adaptive, Steel Nomad Stress Test | none reproduce the hang |
@@ -209,7 +238,8 @@ checksum check with pulsed load for 60 s, raise F in 15 to 30 MHz steps until th
 | 1100 mV | 2,947 | **3,382** | none | +435 / - | voltage ceiling (ran 3,322 to 3,352 MHz, 0 errors) |
 
 - The card holds at most 1.115 to 1.120 V under any load with the voltage slider at +100 %; points at 1,150 and
-  1,200 mV are never used.
+  1,200 mV are never used (with the stock NVVDD REL floor; raising it lifts the limit to 1,170 mV, see
+  [Voltage lever](#voltage-lever)).
 - Isolated re-tests (offset raised only at the voltage under test) failed at the same offsets, so the edges are
   real silicon limits, not an artefact of a uniform offset.
 
@@ -430,13 +460,14 @@ What we did:
 | Power limit 600 -> 700 W | works; Time Spy Extreme graphics 28,223, but Time Spy peaks at about 592 W: the curve and the hang set the score, not power |
 | NVVDD and MSVDD REL ceiling 1,110 -> 1,150 mV | no measurable effect. The REL (reliability) voltage is computed per chip. Afterburner's extended report (Q16) shows NVVDD Vrel 1,120 mV and MSVDD Vrel 1,070 mV on this card; we had first written "about 1,070 mV" for the core, which mixed up the rails. The REL floor (`rel_equation_min`) is the field that raises it |
 | MSVDD REL floor 900 -> 1,100 mV | 4 hangs in 9 runs vs 5 in 8 without: not a fix (small samples). HWiNFO still read MSVDD at 1.07 to 1.09 V under load with it loaded |
-| `runtime_voltage_offsets` 0 -> 1 (on top of the image above) | loaded 18 Nov 15:03; lets mVolt+ apply voltage offsets again on 621.x. Not used yet |
+| `runtime_voltage_offsets` 0 -> 1 (on top of the image above) | loaded 18 Nov 15:03. Meant to let mVolt+ apply voltage offsets again on 621.x, but mVolt+ v0.50.13 offsets were ignored by driver 621.24 (Q27) |
+| `nvvdd_rel_equation_min_mv` 900 -> 1,150 (the NVVDD REL floor, on top of the image above, the only field changed) | **works**: core voltage limit 1,120 -> 1,170 mV after a restart; used for the curve top ([Voltage lever](#voltage-lever)) |
 
 Background (source: the editor's documentation and changelog):
 
 - Driver 621.01 and later ignore NVVDD and MSVDD runtime voltage offsets on RTX 50 cards: the driver reports
   success and nothing changes. Afterburner's voltage slider is a no-op there. The editor's `runtime_voltage_offsets=1`
-  adds hooks so a runtime tool can apply offsets again; we did not use it.
+  adds hooks so a runtime tool can apply offsets again; on our card and driver the offsets were still ignored (Q27).
 - MSVDD feeds the fabric (XBAR and SYS clocks); XBAR runs at about 0.90 x the core clock. NVIDIA lowered the MSVDD
   REL by 50 mV from driver 572.60. That is why the MSVDD floor seemed worth testing.
 
@@ -628,6 +659,63 @@ are the untouched top of the curve and the test state (window then, fullscreen n
 
 ReBAR stays forced for 3DMark (Q23); XBAR +400 is applied by a logon task (Q10).
 
+### Voltage lever
+
+The soft cap only touches points up to 1,060 mV. Above that the curve was flat at 3,247 MHz, and the card never
+went past 1,120 mV: that is the chip's NVVDD Vrel (Q16). The question was whether more voltage at the top buys
+clock in light moments, where the card sits at the top of the curve.
+
+**Runtime offsets: no (measured, 19:20 UTC).** mVolt+ v0.50.13 with `--nvvdd-offsets 0,25,25` on driver 621.24,
+with the image that has `runtime_voltage_offsets=1` loaded, returned success, but its own state reported
+`rail_offsets_ignored_by_driver: true` and `nvvdd_max` stayed at 1,120 mV (Q27).
+
+**Static route: the NVVDD REL floor (measured).** The REL voltage is computed per chip from SPEEDO and then
+clamped between the REL equation floor and ceiling in the VBIOS (our reading of the editor's field names, borne
+out by the result below; our chip computes 1,120 mV, Q16). Raising the floor above the computed value raises the
+limit:
+
+1. Vix Editor, one field on top of the loaded image: `nvvdd_rel_equation_min_mv` 900 -> 1,150. The full field
+   diff showed only that field changed (101 bytes), integrity check valid.
+2. Loaded with the Vix Loader, restart, verified byte for byte against the stored image.
+3. mVolt+ `--status` (read-only) after the restart: `nvvdd_max` **1,170 mV** (REL 1,150 plus the ALT +20 step),
+   was 1,120.
+
+Under load the voltage tops out at about 1.135 V read, about 1.145 V set, which is the REL 1,150 limit; the ALT
++20 above it is not used (measured; the read sits about 10 mV under the point in use, Q26).
+
+**Who uses it (measured).** Heavy loads do not: 4K TSE GT1 (about 540 W) never went above 1.02 V / 3,075 MHz, so
+the soft cap and the GT2 hang work are unaffected. Light loads do: TSE GT1 at 720p (about 250 W) sits at the curve
+top, 3,172 to 3,195 MHz at 1.055 to 1.06 V with the old flat top.
+
+**Ladder (measured).** Top of the Profile 1 curve as a straight ramp from 3,247 MHz at 1,070 mV to 3,247 + D at
+1,170 mV, light 720p GT1, 1 run per screening step:
+
+| D (MHz) | Max clock read | Result |
+|---|---|---|
+| 0 (flat, baseline) | 3,195 at 1.06 V | clean |
+| +60 | 3,255 at 1.135 V | clean |
+| +105 | 3,277 | clean |
+| +150 | 3,315 | clean |
+| +195 | 3,345 | clean; 3 of 3 reliability runs clean (3,337 each) |
+| +255 | 3,382 | clean; 3 of 3 reliability runs clean (3,360 to 3,367) |
+| +315 | 3,457 at 1.145 V | **hung**, driver reset after 16 s |
+
+So the light-load ceiling on this chip is between about 3,380 MHz (clean) and 3,457 MHz (hang), near 3,450
+(estimate). The read clocks sit below the curve points they run on; we did not separate temperature bins from the
+read offset. Fps at 720p stayed at about 275 to 278 whatever the clock, because that test is CPU bound: the clock
+is the metric.
+
+**Saved (20:00 UTC).** Profile 1 = cap 3,090 up to 1,060 mV + top +255 (1,100 mV 3,324, 1,125 3,387, 1,150 3,451,
+1,170 3,502), slot 1 and Startup. Profile 2 = cap 3,075 + top +195 (1,100 mV 3,306, 1,150 3,403, 1,170 3,442), one
+step under, slot 2. Both keep 3,247 MHz at 1,070 mV.
+
+**Heavy check (measured, 1 run).** TSE GT2 on the new Profile 1: **179.0 fps, clean** (176.6 before, same ReBAR and
+XBAR +400). The heaviest scenes stay under the cap; the lighter moments inside GT2 now reach higher clocks. One
+run: a screening result, not yet a reliability count.
+
+**Still open.** Real games (light, CPU bound loads are exactly where the new top runs), a 3DMark app run with a
+valid score, and the 10 to 12 run final pass.
+
 ### From start to finish
 
 | State | GT2 fps |
@@ -637,6 +725,7 @@ ReBAR stays forced for 3DMark (Q23); XBAR +400 is applied by a logon task (Q10).
 | + soft cap (stable) | about 173 |
 | + ReBAR forced | 175.4 to 175.9 |
 | + XBAR +400 | **176.6** |
+| + voltage top (REL floor 1,150 mV, top +255) | 179.0 (1 run, screening) |
 
 The first jump is a measurement fix, not a speed-up the card gained: the old harness rendered a lighter load.
 The real gains on top of a correct measurement are ReBAR (+1.2 %) and XBAR (+0.5 % from +300 to +400, +2.6 % from
@@ -654,7 +743,9 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
    voltage showed nothing before the hang.
 2. Was the higher rate with a cold core real? Our guess was extra temperature bins; but the hangs also came at 46
    to 49 C, and many cold runs were windowed harness runs.
-3. Would a higher NVVDD REL floor help? We raised only the MSVDD floor.
+3. Would a higher NVVDD REL floor help? Answered for light loads: yes, it lifts the core limit to 1,170 mV and
+   light loads gain about 140 to 210 MHz ([Voltage lever](#voltage-lever)). Heavy loads never reach that voltage,
+   so it does nothing for the GT2 hang. Do games gain, and does the new top hold in them?
 4. After one reboot, direct GT2 launches ran at about 90 fps instead of 149, capped or not, then later went back to
    149. We did not find out why; the hang results look the same in both states. After section 7 a display or
    adapter state is the first suspect, but we did not check the window then.
@@ -696,6 +787,10 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
     same clock to a higher voltage. Cap the clock in the curve and leave the top alone.
 18. **Keep the curve monotonic** when editing parts of it, or the driver will not do what the bands say (Q25).
 19. **Check the driver profile too.** Resizable BAR on in the BIOS did not mean 3DMark used it (Q23).
+20. **A "success" from a tool is not a change.** mVolt+ reported success while the driver ignored the offsets; read
+    the limit back (Q27). The static VBIOS field did what the runtime call did not.
+21. **Find the load that uses the change.** The voltage top is invisible in heavy GT2 at 4K and obvious in a light
+    720p run; test where the card actually sits at the top of the curve.
 
 ## What we got wrong
 
