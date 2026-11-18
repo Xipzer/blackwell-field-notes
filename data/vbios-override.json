@@ -1,0 +1,83 @@
+{
+ "card": "RTX 5090 Founders Edition, PCI 10de:2b85, VBIOS 98.02.2E.00.03",
+ "dump": {
+  "tool": "nvflash 5.867 --save (read-only)",
+  "bytes": 1961983,
+  "nvapi_GetVbiosImage_bytes": 458240,
+  "nvapi_note": "truncated; the editor rejects it"
+ },
+ "editor": "Vix Editor 0.1.45 command line, run offline in a no-network namespace",
+ "loader": "Vix Loader 0.5.0 (Windows), driver registry override value 'vbios' in the GPU's display class key; applies after a restart",
+ "fields_total": 136,
+ "images": [
+  {
+   "name": "700w-1150mv",
+   "changed_fields": {
+    "power_max_w": [
+     600,
+     700
+    ],
+    "nvvdd_rel_max_mv": [
+     1110,
+     1150
+    ],
+    "msvdd_rel_max_mv": [
+     1110,
+     1150
+    ],
+    "nvvdd_rel_equation_max_mv": [
+     1110,
+     1150
+    ],
+    "msvdd_rel_equation_max_mv": [
+     1110,
+     1150
+    ]
+   }
+  },
+  {
+   "name": "700w-msvdd1100",
+   "changed_fields": {
+    "power_max_w": [
+     600,
+     700
+    ],
+    "nvvdd_rel_max_mv": [
+     1110,
+     1150
+    ],
+    "msvdd_rel_max_mv": [
+     1110,
+     1150
+    ],
+    "nvvdd_rel_equation_max_mv": [
+     1110,
+     1150
+    ],
+    "msvdd_rel_equation_max_mv": [
+     1110,
+     1150
+    ],
+    "msvdd_rel_equation_min_mv": [
+     900,
+     1100
+    ]
+   },
+   "bytes_changed": 230
+  }
+ ],
+ "other_stock_values": {
+  "power_default_w": 575,
+  "power_min_w": 400,
+  "nvvdd_rel_equation_min_mv": 900,
+  "runtime_voltage_offsets": 0
+ },
+ "results": {
+  "power.max_limit": "700.00 W after the restart; 600.00 W again after unload and restart",
+  "time_spy_extreme_peak_power_w": 592,
+  "time_spy_extreme_graphics": 28223,
+  "rel_ceiling_1150": "no effect measured: the chip's NVVDD REL is about 1070 mV, under the stock 1110 mV ceiling",
+  "msvdd_floor_1100": "GT2 hang rate 4 of 9 (one hard freeze) vs 5 of 8 without; not a fix",
+  "stock_vbios_600w": "Profile 1 hard-hung on GT2 run 1: the override is not the cause of the hangs"
+ }
+}

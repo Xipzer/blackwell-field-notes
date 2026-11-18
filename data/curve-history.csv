@@ -1,0 +1,31 @@
+date,time_utc,curve,change,test,result,score_or_note
+2026-11-17,13:05,candidate 1,compute limits minus 45 MHz; cap 3330,Time Spy Extreme,FAIL,driver reset (nvlddmkm 153/14)
+2026-11-17,13:57,candidate 2,compute limits minus 75 MHz; cap 3300,Time Spy Extreme,PASS,"24,167; graphics 28,009"
+2026-11-17,13:57,candidate 2,,Steel Nomad Stress Test,PASS,"99.1 %; Steel Nomad 15,676"
+2026-11-17,14:01,candidate 3,900-1060 mV back to minus 45,Time Spy Extreme,FAIL,crash
+2026-11-17,14:07,candidate 4,900-989 mV minus 45; 990 mV and up minus 75,Time Spy Extreme,PASS,"graphics 28,113"
+2026-11-17,14:12,candidate 5,1000 mV +420,Time Spy Extreme,FAIL,crash: 1000 mV +420 fails in 3D
+2026-11-17,14:22,candidate 6,950 mV region +465,Time Spy Extreme,PASS,"24,247; graphics 28,106"
+2026-11-17,14:36,candidate 7,1050 mV region +390,Time Spy Extreme,PASS,"24,063; graphics 28,145"
+2026-11-17,14:41,candidate 8,top +375; cap 3330,Time Spy Extreme,FAIL,driver reset
+2026-11-17,15:13,candidate 7,,Steel Nomad Stress Test (water 43-45 C),PASS,"98.7 %; best loop 15,726"
+2026-11-17,15:21,candidate 7,,Time Spy Extreme (water 36 C),FAIL,ran flat at 3292 MHz when it failed
+2026-11-17,15:25,candidate 9,top margin 105 (+330); cap 3270,Time Spy Extreme,FAIL,crash at 3262 MHz / 1110 mV seen
+2026-11-17,15:31,candidate 9,cap 3180,Time Spy Extreme,FAIL,crash
+2026-11-17,15:36,candidate 10,1011-1060 mV +390; top margin 105; cap 3180,Time Spy Extreme,FAIL,crash at 3172 MHz / 1020 mV seen
+2026-11-17,18:07,FurMark curve,FurMark 3D limits with no margin,Time Spy Extreme,FAIL,crash at 3097 MHz / 1005 mV
+2026-11-17,18:14,real-clock curve,each point = highest real clock FurMark proved; top 3277,Time Spy Extreme,FAIL,hang signature 3120 MHz / 1035 mV heavy
+2026-11-17,18:19,real-clock curve,,Time Spy Extreme,FAIL,hang signature 3127 MHz / 1035 mV heavy
+2026-11-17,18:26,real-clock minus 15,top 3262,Time Spy Extreme,PASS,"24,072; graphics 27,883"
+2026-11-17,18:32,top-up 1,candidate 7 mid range; top 3262,Time Spy Extreme,PASS,"23,954; graphics 28,024"
+2026-11-17,18:38,top-up 2,950 mV 3015; 1050 mV 3255,Time Spy Extreme,FAIL,hang in a heavy phase 3142-3165 MHz / 1045-1055 mV
+2026-11-17,18:45,top-up 3 (Profile 1),950 mV 3015; 1050 mV back to 3240,Time Spy Extreme,PASS,"24,122; graphics 27,974"
+2026-11-17,18:50,Profile 1,,Time Spy Extreme,PASS,"graphics 27,935"
+2026-11-17,18:55,Profile 1,,Time Spy Extreme,PASS,"graphics 27,951"
+2026-11-17,19:31,Profile 1,,Steel Nomad Stress Test,PASS,"99.2 %; best loop 15,784; worst 15,652"
+2026-11-17,19:39,Profile 1,cold (water 26 C),Time Spy Extreme,FAIL,hang signature 3142 MHz / 1035 mV heavy
+2026-11-17,19:43,Profile 1 (top 3247),cold (water 25.7 C),Time Spy Extreme,FAIL,hang signature 3112 MHz / 1010 mV heavy
+2026-11-17,19:58,Profile 1,cold (water 25 C); cap 3232,Time Spy Extreme,PASS,"23,991; graphics 28,053"
+2026-11-17,20:06,Profile 1,water 24 C; cap 3232,Time Spy Extreme,PASS,"graphics 28,128"
+2026-11-17,20:13,Profile 1 with 1025 mV +420,cold; cap 3232,Time Spy Extreme,FAIL,hang signature 3082 MHz / 1000 mV heavy
+2026-11-18,,Profile 1,700 W VBIOS override,Time Spy Extreme,PASS,"graphics 28,223 (first run with the override)"

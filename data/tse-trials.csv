@@ -1,0 +1,80 @@
+date,time_utc,label,setup,power_limit_w,vbios,cap_mhz,mem_offset,run,result,status,gt2_fps,driver_resets
+2026-11-17,20:40:43,slot5,A: Profile 1 with 1000 and 1025 mV one notch (15 MHz) down,600,stock,3202,3000,1,PASS,EXIT 0,149.5,0
+2026-11-17,20:44:48,slot5,A: Profile 1 with 1000 and 1025 mV one notch (15 MHz) down,600,stock,3202,3000,2,FAIL,TIMEOUT,,8
+2026-11-17,20:47:31,slot5,B: Profile 1 with 1000 and 1025 mV two notches (30 MHz) down,600,stock,3202,3000,1,PASS,EXIT 0,149.3,0
+2026-11-17,20:51:32,slot5,B: Profile 1 with 1000 and 1025 mV two notches (30 MHz) down,600,stock,3202,3000,2,FAIL,TIMEOUT,,9
+2026-11-17,20:54:55,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,1,PASS,EXIT 0,148.7,0
+2026-11-17,20:56:26,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,2,PASS,EXIT 0,149.3,0
+2026-11-17,20:57:54,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,3,PASS,EXIT 0,149.1,0
+2026-11-17,20:59:51,slot1,Profile 1 controlled test,600,stock,3247,3000,1,FAIL,EXIT 0,,9
+2026-11-17,21:23:29,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,1,PASS,EXIT 0,148.2,0
+2026-11-17,21:24:56,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,2,PASS,EXIT 0,147.5,0
+2026-11-17,21:26:27,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,3,PASS,EXIT 0,148.3,0
+2026-11-17,21:27:55,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,4,PASS,EXIT 0,147.6,0
+2026-11-17,21:28:50,slot5,C: Profile 1 minus 30 MHz at every point,600,stock,3202,3000,5,FAIL,"inferred from telemetry: hang signature at 21:28:50, not in the trial log",,
+2026-11-17,21:36:46,mem2000,Profile 1 with memory +2000,600,stock,3247,2000,1,FAIL,TIMEOUT,,9
+2026-11-17,21:40:56,p3cold,Profile 3: uniform +360,600,stock,3180,3000,1,PASS,EXIT 0,147.3,0
+2026-11-17,21:42:27,p3cold,Profile 3: uniform +360,600,stock,3180,3000,2,PASS,EXIT 0,147.1,0
+2026-11-17,21:43:37,p3cold,Profile 3: uniform +360,600,stock,,3000,3,NOT RUN,test did not start,,
+2026-11-17,21:46:56,p1cleanboot,Profile 1 after a fresh reboot,600,stock,,3000,1,NOT RUN,test did not start,,
+2026-11-17,21:47:20,p1cleanboot,Profile 1 after a fresh reboot,600,stock,,3000,1,NOT RUN,test did not start,,
+2026-11-17,21:47:42,p1cleanboot,Profile 1 after a fresh reboot,600,stock,,3000,1,NOT RUN,test did not start,,
+2026-11-17,21:48:06,p1cleanboot,Profile 1 after a fresh reboot,600,stock,3202,3000,1,NOT RUN,"stale DXGI LUID, launch refused",,0
+2026-11-17,21:51:58,p1cleanboot,Profile 1 after a fresh reboot,600,stock,3202,3000,1,FAIL,TIMEOUT,,6
+2026-11-17,21:54:27,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,1,PASS,EXIT 0,89.9,0
+2026-11-17,21:55:58,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,2,PASS,EXIT 0,90.0,0
+2026-11-17,21:57:26,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,3,PASS,EXIT 0,89.8,0
+2026-11-17,21:58:56,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,4,PASS,EXIT 0,90.0,0
+2026-11-17,22:00:24,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,5,PASS,EXIT 0,90.1,0
+2026-11-17,22:01:55,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,6,PASS,EXIT 0,90.0,0
+2026-11-17,22:03:23,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,7,PASS,EXIT 0,90.0,0
+2026-11-17,22:04:54,p1cap3060cold,Profile 1 plus clock cap,600,stock,3060,3000,8,PASS,EXIT 0,90.0,0
+2026-11-17,22:22:44,cap3090,Profile 1 plus clock cap,600,stock,3090,3000,1,PASS,EXIT 0,89.9,0
+2026-11-17,22:24:11,cap3090,Profile 1 plus clock cap,600,stock,3090,3000,2,PASS,EXIT 0,90.0,0
+2026-11-17,22:25:42,cap3090,Profile 1 plus clock cap,600,stock,3090,3000,3,PASS,EXIT 0,90.0,0
+2026-11-17,22:27:10,cap3090,Profile 1 plus clock cap,600,stock,3090,3000,4,PASS,EXIT 0,90.1,0
+2026-11-17,22:28:41,cap3090,Profile 1 plus clock cap,600,stock,3090,3000,5,PASS,EXIT 0,90.0,0
+2026-11-18,00:21:36,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,1,FAIL,TIMEOUT,,8
+2026-11-18,00:23:35,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,1,PASS,EXIT 0,149.4,0
+2026-11-18,00:25:04,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,2,PASS,EXIT 0,148.8,0
+2026-11-18,00:27:51,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,1,PASS,EXIT 0,148.8,0
+2026-11-18,00:29:23,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,2,PASS,EXIT 0,148.7,0
+2026-11-18,00:30:52,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,3,PASS,EXIT 0,149.2,0
+2026-11-18,00:32:24,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,4,PASS,EXIT 0,149.0,0
+2026-11-18,00:33:53,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,5,PASS,EXIT 0,149.0,0
+2026-11-18,00:35:25,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,6,PASS,EXIT 0,147.8,0
+2026-11-18,00:36:56,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,7,PASS,EXIT 0,148.9,0
+2026-11-18,00:38:25,top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,8,PASS,EXIT 0,149.3,0
+2026-11-18,00:40:10,top2,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3285,3000,1,PASS,EXIT 0,148.9,0
+2026-11-18,00:42:15,top2,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3285,3000,2,FAIL,DRIVER RESET after 121 s,,7
+2026-11-18,00:43:52,confirm-top1,Profile 1 with the top extended (1100-1150 mV points),700,700W+1150mV ceiling,3270,3000,1,FAIL,DRIVER RESET after 50 s,,2
+2026-11-18,00:46:52,lock3135-from1025mV,"cause experiment: clock locked min=max, curve reaches it only from V0",700,700W+1150mV ceiling,3135,3000,1,FAIL,DRIVER RESET after 74 s,,
+2026-11-18,00:47:54,cap3150-700w,Profile 1 plus clock cap,700,700W+1150mV ceiling,3150,3000,1,FAIL,DRIVER RESET after 38 s,,9
+2026-11-18,00:49:52,cap3135-700w,Profile 1 plus clock cap,700,700W+1150mV ceiling,3135,3000,1,PASS,EXIT 0,147.7,0
+2026-11-18,00:51:23,cap3135-700w,Profile 1 plus clock cap,700,700W+1150mV ceiling,3135,3000,2,PASS,EXIT 0,148.2,0
+2026-11-18,00:52:51,cap3135-700w,Profile 1 plus clock cap,700,700W+1150mV ceiling,3135,3000,3,PASS,EXIT 0,147.9,0
+2026-11-18,00:54:23,cap3135-700w,Profile 1 plus clock cap,700,700W+1150mV ceiling,3135,3000,4,PASS,EXIT 0,148.5,0
+2026-11-18,00:55:35,cap3135-700w,Profile 1 plus clock cap,700,700W+1150mV ceiling,3135,3000,5,FAIL,DRIVER RESET after 68 s,,8
+2026-11-18,00:57:20,p1-600w-override,Profile 1 at 600 W with the override loaded,600,700W+1150mV ceiling,3300,3000,1,FAIL,DRIVER RESET after 45 s,,9
+2026-11-18,01:04:04,p1-600w-stock-vbios,"Profile 1, stock VBIOS (drive locked: never ran)",600,stock,,3000,1,NOT RUN,test did not start,,
+2026-11-18,01:06:58,p1-600w-stock-vbios,"Profile 1, stock VBIOS (drive locked: never ran)",600,stock,,3000,1,NOT RUN,test did not start,,
+2026-11-18,01:09:54,p1-600w-stock-vbios,"Profile 1, stock VBIOS (drive locked: never ran)",600,stock,,3000,1,NOT RUN,test did not start,,
+2026-11-18,01:12:50,p1-600w-stock-vbios,"Profile 1, stock VBIOS (drive locked: never ran)",600,stock,3300,3000,1,NOT RUN,3DMark drive BitLocker-locked,,0
+2026-11-18,07:38,p1-600w-stock-vbios,"Profile 1, stock VBIOS (after unlocking the drive)",600,stock,3300,3000,1,FAIL,"hard hang, power cycle",,
+2026-11-18,07:57:25,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,1,PASS,EXIT 0,90.2,
+2026-11-18,07:57:55,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,2,FAIL,DRIVER RESET after 27 s,,
+2026-11-18,07:58:51,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,3,FAIL,DRIVER RESET after 30 s,,
+2026-11-18,08:00:41,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,4,PASS,EXIT 0,90.0,
+2026-11-18,08:02:07,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,5,FAIL,DRIVER RESET after 83 s,,
+2026-11-18,08:03:57,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,6,PASS,EXIT 0,89.9,
+2026-11-18,08:04:40,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,7,FAIL,DRIVER RESET after 39 s,,
+2026-11-18,08:06:23,p1-700w,"Profile 1 at 700 W, hang-rate count",700,700W+1150mV ceiling,3300,3000,8,FAIL,DRIVER RESET after 84 s,,
+2026-11-18,08:10,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV (first attempt)",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,1,FAIL,"hard hang, Windows frozen, power cycle",,
+2026-11-18,08:20:58,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,1,FAIL,DRIVER RESET after 85 s,,
+2026-11-18,08:22:43,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,2,PASS,EXIT 0,149.3,
+2026-11-18,08:24:13,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,3,PASS,EXIT 0,149.6,
+2026-11-18,08:25:13,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,4,FAIL,DRIVER RESET after 53 s,,
+2026-11-18,08:27:11,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,5,FAIL,DRIVER RESET after 98 s,,
+2026-11-18,08:29:00,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,6,PASS,EXIT 0,149.8,
+2026-11-18,08:30:27,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,7,PASS,EXIT 0,149.5,
+2026-11-18,08:31:58,p1-700w-msvddfloor,"Profile 1 at 700 W, MSVDD REL floor 1100 mV",700,700W+1150mV ceiling+MSVDD floor 1100,3300,3000,8,PASS,EXIT 0,149.8,

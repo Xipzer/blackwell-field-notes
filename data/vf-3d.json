@@ -1,0 +1,72 @@
+{
+ "card": "RTX 5090 Founders Edition, water-cooled, 600 W, voltage slider +100 %",
+ "load": "FurMark 2.11, Vulkan fur demo, artifact scanner on; window shrunk (1280x720 down to 320x180) until the real clock was within 50 MHz of the lock; offset only at and above the voltage under test, +300 below; clock locked with nvidia-smi -lgc F,F; 30 to 60 s per step; everyday water (about 28 to 32 C)",
+ "note": "lock_mhz is the requested clock, real_mhz what the card ran (temperature bins hold it 15 to 50 MHz under the lock). These limits still overstate what Time Spy survives at 1000 to 1050 mV under full power.",
+ "per_voltage": {
+  "850": {
+   "base_mhz": 1320,
+   "max_pass_lock_mhz": 1830,
+   "real_mhz": "1785-1800",
+   "first_fail": "1845 (settings lost after a driver reset)"
+  },
+  "875": {
+   "base_mhz": 1657,
+   "max_pass_lock_mhz": 2167,
+   "real_mhz": "2115-2122",
+   "first_fail": "2182 (5 driver resets, GPU hung)"
+  },
+  "900": {
+   "base_mhz": 2002,
+   "max_pass_lock_mhz": 2377,
+   "real_mhz": "2332",
+   "first_fail": "not reached at 2392 (ran 2340)"
+  },
+  "950": {
+   "base_mhz": 2535,
+   "max_pass_lock_mhz": 3015,
+   "real_mhz": "2902-2910 (hot core; suspect, see note)",
+   "first_fail": "3030 driver reset, 3045 PC went down",
+   "time_spy": "3015 (+480) passed Time Spy Extreme"
+  },
+  "1000": {
+   "base_mhz": 2715,
+   "max_pass_lock_mhz": 3165,
+   "real_mhz": "3112-3120",
+   "first_fail": "not reached at 3180",
+   "time_spy": "+405 (3120) pass, +420 crash, +450 crash"
+  },
+  "1025": {
+   "base_mhz": 2797,
+   "max_pass_lock_mhz": 3202,
+   "real_mhz": "3150-3157",
+   "first_fail": "not reached at 3217",
+   "time_spy": "+405 (3202) pass, +420 crash"
+  },
+  "1050": {
+   "base_mhz": 2850,
+   "max_pass_lock_mhz": 3285,
+   "real_mhz": "3232-3240",
+   "first_fail": "3300 (driver reset, then FurMark hung)",
+   "time_spy": "+390 (3240) pass, +405 crash"
+  },
+  "1075": {
+   "base_mhz": 2902,
+   "max_pass_lock_mhz": 3292,
+   "real_mhz": "3247",
+   "first_fail": "not reached at 3307"
+  },
+  "1100": {
+   "base_mhz": 2947,
+   "max_pass_lock_mhz": 3322,
+   "real_mhz": "3270-3277",
+   "first_fail": "not reached at 3337",
+   "time_spy": "top above about 3,255 MHz real crashed Time Spy"
+  },
+  "1120": {
+   "base_mhz": 2985,
+   "max_pass_lock_mhz": null,
+   "real_mhz": "3247-3262",
+   "first_fail": "not reached at 3330 (voltage ceiling)"
+  }
+ }
+}
