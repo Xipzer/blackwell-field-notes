@@ -84,6 +84,27 @@ higher; we did not measure it.
 The tools used here are in [blackwell-overclock-autopilot](https://github.com/Xipzer/blackwell-overclock-autopilot).
 The CPU and RAM side of the same machine is in [raptor-lake-field-notes](https://github.com/Xipzer/raptor-lake-field-notes).
 
+### Hardware and silicon
+
+The setup behind that result, so you can judge how reachable it is (measured, fuse values from the Afterburner
+`MAKEREPORT`, Q16):
+
+| | |
+|---|---|
+| GPU | RTX 5090 Founders Edition |
+| GPU silicon | SPEEDO 2109 in a fused range of [2018.94, 2284.87], about 0.34 of the way up (lower third); IDDQ NVVDD 42300, MSVDD 14050; NVVDD Vrel 1,120 mV class |
+| VBIOS | stock 98.02.2E.00.03, never flashed; power limit raised to 700 W by a runtime override (Vix Loader) |
+| Driver | 621.24 |
+| Cooling | custom water loop with three radiators, order pump, radiator, GPU, radiator, CPU, radiator; ambient room air, no chiller |
+| Mods | none: no shunt mod, no voltage controller mod, no external voltage control |
+| CPU | i9-14900KS, SP101 (P-core quality 101, E-core 86), 57x P / 46x E / ring 50, fixed 1.320 V daily |
+| RAM | 2x24 GB DDR5-8400 (Hynix M-die), tuned timings |
+| Board | Mini-ITX Z790 |
+
+A GPU binned below the median, plus methodical tuning (a correct fullscreen harness, iGPU removal, a soft-capped
+curve, XBAR and ReBAR), reached about the top 3 % for this CPU and GPU pairing. The gap to the top of the list is
+hardware mods and sub-ambient cooling, not silicon luck (estimate, from the top entries above).
+
 ## Quirks index
 
 Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QUIRKS.md). Short version:
