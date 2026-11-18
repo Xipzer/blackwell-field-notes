@@ -29,3 +29,8 @@ date,heavy_time,heavy_mhz,heavy_mv,heavy_w,core_c,hang_time,hang_w,hang_usage_pc
 2026-11-18,08:20:49.429,3112,1015,494,44,08:20:49.539,121,98,3225,2.0,"GT2 harness, 700 W + MSVDD floor run 1"
 2026-11-18,08:24:51.730,3097,1015,545,47,08:24:51.841,130,100,3225,14.5,"GT2 harness, 700 W + MSVDD floor run 4"
 2026-11-18,08:26:50.871,3105,1020,532,46,08:26:50.979,122,100,3225,14.9,"GT2 harness, 700 W + MSVDD floor run 5"
+2026-11-18,08:56:48.035,3165,1030,309,37,08:56:48.365,124,71,3225,5.3,"GT2 harness, memory +0, windowed, run 2 (hard freeze; found by hand: 1 s Afterburner polling and a windowed load under the 400 W threshold)"
+2026-11-18,09:39:06.765,2932,960,427,47,09:39:06.873,116,100,3052,2.9,"GT2 harness, fullscreen, 700 W, cap 3060 run 9 (power read 427 W frozen for 4 samples after 529 W)"
+2026-11-18,10:10:43.161,3090,1025,542,48,10:10:43.271,127,100,3195,14.5,"GT2 harness, fullscreen, 700 W, whole curve 30 MHz lower, run 6"
+2026-11-18,10:14:35.247,3000,980,510,46,10:14:35.357,118,100,3082,17.9,"GT2 harness, fullscreen, 700 W, cap 3090 (fps comparison session 1)"
+2026-11-18,10:29:53.895,3067,1010,561,48,10:29:54.005,125,100,3225,3.6,"GT2 harness, fullscreen, 700 W, uncapped (fps comparison session 3)"
