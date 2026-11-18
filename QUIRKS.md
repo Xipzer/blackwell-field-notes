@@ -473,6 +473,22 @@ Final Profile 1, XBAR +300, borderless fullscreen:
 +1.2 % (173.3 to 175.4 on average). Profile 1 with ReBAR forced then ran 3 of 3 clean at 175.4 to 175.9, so the
 extra load did not show a new hang. Driver updates can reset NPI settings; check after each one.
 
+**Other 3DMark tests: the .nip import silently does nothing (measured, 18 Nov).** Importing new profiles named
+"3DMark Fire Strike", "3DMark Port Royal" and "3DMark Steel Nomad" with `-silentImport` exited 0, but the export
+showed no change. The executables already belong to predefined NVIDIA profiles with other names, and an executable
+can only sit in one profile. Asking the driver which profile owns each executable (NVAPI DRS,
+`NvAPI_DRS_FindApplicationByName`) gave:
+
+| Executable | Predefined driver profile |
+|---|---|
+| `3DMarkICFWorkload.exe`, `3DMarkICFDemo.exe` (Fire Strike) | 3DMark Ice Storm |
+| `3DMarkPortRoyal.exe` | 3DMark Port Royal DLSS |
+| `3DMarkSteelNomad.exe` | 3DMark - Steel Nomad |
+| `3DMarkTimeSpy.exe` | 3DMark TimeSpy |
+
+Setting `rBAR - Enable` = 1 on those profiles through NVAPI DRS (`NvAPI_DRS_SetSetting`, then
+`NvAPI_DRS_SaveSettings`) worked, and an NPI export confirmed all four. The gain on those tests is not measured yet.
+
 <a id="q24"></a>
 ### Q24. One GPU in the system: Afterburner drops the `GPU1 ` prefix
 
