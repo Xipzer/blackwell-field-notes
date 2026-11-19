@@ -1,6 +1,6 @@
 # Blackwell field notes
 
-Field notes from tuning one water-cooled RTX 5090 Founders Edition over two days (17 and 18 Nov 2026): what we
+Field notes from tuning one water-cooled RTX 5090 Founders Edition over three days (17 to 19 Nov 2026): what we
 tried, what broke, the numbers, and what we still do not understand.
 
 **Status (18 Nov 2026, 18:30 UTC): done.** Two final profiles are saved and tested in real borderless fullscreen.
@@ -35,6 +35,15 @@ Test **99.3 %**, 20 loops, clean. Heavy loads now draw about 45 W more for the s
 Variable 20 min then Switch 20 min: no errors, no driver resets (it peaks at about 3,037 MHz, so it does not reach the
 3,090 MHz heavy-load edge; the 3DMark runs cover that).
 
+**Update (19 Nov, afternoon UTC): the overclock is applied without Afterburner.** The curve, the power limit, the
+memory offset and the XBAR offset can all be written to the driver natively, through the driver's own
+`nvapi64.dll`. A read-only probe matched Afterburner's applied profile on 127 of 127 points, a write test passed
+with every value read back and no driver reset, and [blackout-tray](https://github.com/Xipzer/blackout-tray) now
+applies Profile 1 and XBAR +400 at startup and after a driver reset (the reset path has not yet been exercised by a
+real reset). Afterburner stays installed but no longer starts with Windows. One trap: a native memory offset write
+zeroes the whole curve, so the curve has to go last (Q29). These are private driver interfaces, tested on one card
+and one driver. See [Without Afterburner](#without-afterburner-19-nov).
+
 ## Final profiles
 
 | | Profile 1 (max) | Profile 2 (one step down) |
@@ -44,7 +53,7 @@ Variable 20 min then Switch 20 min: no errors, no driver resets (it peaks at abo
 | Top of the curve, 18 Nov 20:00 (replaced) | cap only up to 1,060 mV, 3,247 MHz at 1,070 mV, ramp to +255 at 1,170 mV (1,150 mV 3,451) | the same with +195 |
 | Light-load top (720p GT1) | 19 Nov shape: 1 of 1 clean, max 1.135 V; 18 Nov +255 ramp: 4 of 4 clean, up to 3,360 to 3,382 MHz read | 18 Nov +195 ramp: 4 of 4 clean, up to 3,337 to 3,345 MHz read |
 | VBIOS image | 700 W override with the NVVDD REL floor at 1,150 mV (core voltage limit 1,170 mV) | same |
-| Afterburner slot | 1 and Startup | 2 |
+| Stored in (since 19 Nov afternoon, [Without Afterburner](#without-afterburner-19-nov)) | blackout-tray profile 1, applied natively at startup and after a driver reset; also still in Afterburner slot 1 | blackout-tray profile 2; also still in Afterburner slot 2 |
 | Power / memory | 700 W (VBIOS override, 121 %), memory +3000 | same |
 | GT2 runs (borderless fullscreen) | 6 clean, 1 hang in 7: **at the edge** | **6 of 6 clean** |
 | GT2 fps, XBAR +300, ReBAR default | 172.8 to 173.4 | 171.9 to 173.4 |
@@ -65,8 +74,12 @@ Applies to both:
   `rBAR - Enable` (0x000F00BA) = 1, size limit left empty. 173.0 and 173.5 fps before, 175.3 and 175.5 forced,
   173.1 with it off again: +1.2 % (Q23). Also forced for Fire Strike, Port Royal and Steel Nomad on their own
   predefined driver profiles (Q23).
-- **Crossbar clock (XBAR) +400** through a logon task (`MSIAfterburner.exe /wpXBARCLK_off,400`), since the offset
-  is not stored in a profile and is lost at every driver reset (Q10, Q17).
+- **Crossbar clock (XBAR) +400**. An Afterburner profile does not store the offset and every driver reset drops it
+  (Q10, Q17). Until 19 Nov a logon task sent it (`MSIAfterburner.exe /wpXBARCLK_off,400`); since then blackout-tray
+  writes it natively together with the profile, at startup and after a driver reset (Q29).
+- **No tuning app at startup (since 19 Nov afternoon)**: blackout-tray applies the power limit, memory offset, XBAR
+  offset and curve itself. Afterburner is installed but not started with Windows; we start it by hand as a fallback
+  and for monitoring during tuning sessions.
 - **6 clean runs prove little**: they only rule out hang rates above about 39 % (Q19). Profile 1 hung once in 7, so
   it sits on the edge; Profile 2 is the one to fall back to if anything hangs in daily use.
 
@@ -88,7 +101,7 @@ Validated 3DMark Time Spy Extreme, official app run with a valid result (green c
 | 3DMark average for the same CPU and GPU | 22,702 (overall) |
 
 Setup for that run: Profile 1 (the original max curve soft-capped flat at 3,090 MHz for every point at or under
-1,060 mV, 3,247 MHz above), XBAR +400 (logon task), Resizable BAR forced on the driver's 3DMark TimeSpy profile,
+1,060 mV, 3,247 MHz above), XBAR +400 (a logon task at the time), Resizable BAR forced on the driver's 3DMark TimeSpy profile,
 700 W through the runtime VBIOS override (no flash), memory +3000, all monitors on the 5090, iGPU disabled, CPU 57x
 all-core at a fixed 1.320 V and DDR5-8400 with tuned timings (the daily settings from raptor-lake-field-notes). It is
 the daily profile: water-cooled, no hardware mods, no chilled water.
@@ -207,14 +220,14 @@ Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QU
 | [Q7](QUIRKS.md#q7) | HWiNFO INI keys (`SensorsSM`, `oneAPI`, `PresentMon`, `NvmlSupport`) | table | |
 | [Q8](QUIRKS.md#q8) | Effective, XBAR, SYS clocks and limit flags under GT2 | table | |
 | [Q9](QUIRKS.md#q9) | "Performance Limit - Utilization" = GPU not fully busy | use as a load check | yes (HWiNFO author) |
-| [Q10](QUIRKS.md#q10) | Afterburner Beta 5 "out of warranty" mode (`OEM=3`), `/wpXBARCLK_off,N`: +300 = +2.6 % in the window; in fullscreen +400 (2,737 MHz) = 176.6 fps, ceiling about 0.9 x core | logon task with +400; re-apply after every driver reset | yes (VideoCardz, TweakTown) |
+| [Q10](QUIRKS.md#q10) | Afterburner Beta 5 "out of warranty" mode (`OEM=3`), `/wpXBARCLK_off,N`: +300 = +2.6 % in the window; in fullscreen +400 (2,737 MHz) = 176.6 fps, ceiling about 0.9 x core | +400 daily; not stored in a profile, so re-apply after every restart and driver reset (a logon task until 19 Nov, natively since, Q29) | yes (VideoCardz, TweakTown) |
 | [Q11](QUIRKS.md#q11) | Global settings live in `Profiles\MSIAfterburner.cfg`; `HwPollPeriod` defaults to 1000 ms | edit that file; 100 ms while logging | |
 | [Q12](QUIRKS.md#q12) | Afterburner shared memory goes stale after an Afterburner restart | logger checks signature and timestamp, reopens | none found |
 | [Q13](QUIRKS.md#q13) | `[Startup]` rewritten when the UI applies settings | check it after UI use | |
 | [Q14](QUIRKS.md#q14) | Voltage slider and `NVVDD_off_Vrel` ignored on driver 621.x | none at runtime here (Q27); raise the NVVDD REL floor in the image instead | yes (Vix Editor) |
 | [Q15](QUIRKS.md#q15) | RTSS error popup after installing Afterburner Beta 5 | reinstall RTSS | similar (Guru3D) |
 | [Q16](QUIRKS.md#q16) | `MAKEREPORT`: SPEEDO 2109 (about a third into its fuse range), NVVDD Vrel 1,120 mV, MSVDD Vrel 1,070 mV with -50 mV | read-only diagnostics | yes (VideoCardz describes the report) |
-| [Q17](QUIRKS.md#q17) | Driver reset wipes curve, memory offset, cap and XBAR offset | re-apply after event 4101 | |
+| [Q17](QUIRKS.md#q17) | Driver reset wipes curve, memory offset, cap and XBAR offset | re-apply after event 4101 (blackout-tray does it natively since 19 Nov, Q29; not yet exercised by a real reset) | |
 | [Q18](QUIRKS.md#q18) | GT2 hangs at a heavy-load clock wall (3,045 to 3,090 MHz) whatever the voltage; per-band margin and `-lgc` caps did not stop it | soft cap in the curve: points up to 1,060 mV flat at 3,090 / 3,075 MHz, top untouched | owner reports of 3.1 to 3.15 GHz game-stable |
 | [Q19](QUIRKS.md#q19) | 8 runs prove little: 16 clean = under 17 %, 60 clean = under 5 % | 1 / 3 / 10 to 12 run method | yes (rule of three) |
 | [Q20](QUIRKS.md#q20) | Two harnesses at once: about 90 fps, invalid | one chain at a time | |
@@ -226,6 +239,7 @@ Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QU
 | [Q26](QUIRKS.md#q26) | The voltage read at a hang sits about 10 mV under the V/F point in use | attribute hangs near a band edge to the band above | |
 | [Q27](QUIRKS.md#q27) | mVolt+ runtime NVVDD offsets on driver 621.24 report success but `rail_offsets_ignored_by_driver: true`, even with a `runtime_voltage_offsets=1` image; the core limit stays 1,120 mV | static route: VBIOS image `nvvdd_rel_equation_min_mv` 900 -> 1,150 (limit 1,170 mV after a restart) | none found |
 | [Q28](QUIRKS.md#q28) | Raising the core voltage limit moves heavy loads up the curve too: a clock step that was out of reach (1,065 to 1,070 mV here) becomes reachable and hangs | extend the soft cap to where heavy loads can now go (here 1,100 mV), ramp the top above it | none found |
+| [Q29](QUIRKS.md#q29) | Curve, power limit, memory offset and XBAR offset can be applied natively through `nvapi64.dll`, without Afterburner (driver 621.24). A native memory offset write zeroes every curve offset; a memory offset set by Afterburner reads 0 in Pstates20; writes need admin (-137); a zeroed buffer is ignored | order: power, memory, XBAR, curve last, then read back; read, change, write back; private interfaces, keep a tuning app installed as fallback | yes (the open-source projects the layouts come from) |
 
 Before trusting any number, run the [clean measurement checklist](QUIRKS.md#clean-measurement-checklist).
 
@@ -243,7 +257,7 @@ Labels:
 | CPU / board | i9-14900KS, ASRock Z790I Lightning WiFi (see raptor-lake-field-notes) |
 | OS / driver | Windows 11, NVIDIA driver 621.24 |
 | Monitors | Samsung Odyssey Neo G9 5120x1440 240 Hz (DSC), Dell AW2521H 1080p 360 Hz, ASUS XG258Q 1080p 240 Hz, BenQ XL2420Z 1080p 144 Hz; until 18 Nov 15:44 UTC the BenQ was on the Intel iGPU, since then all four are on the 5090 and the iGPU is off |
-| Tools | MSI Afterburner 4.6.7 Beta 2 (Beta 5 build 19412 from 18 Nov) with RTSS 7.3.7, HWiNFO64 8.61 (free), PresentMon 2.6.0, nvidia-smi, 3DMark (Time Spy Extreme, Steel Nomad), FurMark 2.11, OCCT 17.1.12, our CUDA checks, nvflash 5.867 (read only), Vix Editor 0.1.45, Vix Loader 0.5.0, NVIDIA Profile Inspector (ReBAR) |
+| Tools | MSI Afterburner 4.6.7 Beta 2 (Beta 5 build 19412 from 18 Nov) with RTSS 7.3.7, HWiNFO64 8.61 (free), PresentMon 2.6.0, nvidia-smi, 3DMark (Time Spy Extreme, Steel Nomad), FurMark 2.11, OCCT 17.1.12, our CUDA checks, nvflash 5.867 (read only), Vix Editor 0.1.45, Vix Loader 0.5.0, NVIDIA Profile Inspector (ReBAR), blackout-tray (applies the overclock natively since 19 Nov; Afterburner is then only started by hand) |
 | Cooling | GPU core about 18 to 20 C over water at 600 to 700 W; water 22 to 36 C during the tests |
 
 ## Summary: what works and what does not
@@ -284,6 +298,7 @@ Labels:
 | **Soft cap extended to 1,100 mV, ramp 1,100 to 1,150 mV (19 Nov)** | **TSE GT2 3 of 3 clean (176.1 to 176.6 fps), Fire Strike Ultra graphics 37,457 (+1.3 %), valid** |
 | Memory +0 to +3000 at a fixed cap | +1.4 % fps from +0 to +3000; no effect on the hang |
 | Afterburner open or closed, `OEM=0` or `3`, nvidia-smi logger, CPU spin, P-core pinning | no fps difference |
+| **Curve, power limit, memory offset and XBAR offset written natively through `nvapi64.dll`, no Afterburner (19 Nov, driver 621.24)** | **works**: every value read back, no driver reset; a memory write zeroes the curve, so the curve goes last (Q29, [Without Afterburner](#without-afterburner-19-nov)) |
 | FurMark, FurMark load steps, a CUDA load ramp, OCCT 3D Adaptive, Steel Nomad Stress Test | none reproduce the hang |
 
 ## 1. Per-voltage search, compute (measured)
@@ -720,7 +735,8 @@ are the untouched top of the curve and the test state (window then, fullscreen n
 | + XBAR +400 (2,737 MHz) | 176.6 |
 | + XBAR +500 (2,775 MHz, about 0.9 x core, the ceiling) | 176.6, 176.4, 176.9, 176.5 |
 
-ReBAR stays forced for 3DMark (Q23); XBAR +400 is applied by a logon task (Q10).
+ReBAR stays forced for 3DMark (Q23). XBAR +400 was applied by a logon task (Q10) until 19 Nov; since then
+blackout-tray writes it natively ([Without Afterburner](#without-afterburner-19-nov)).
 
 ### Voltage lever
 
@@ -841,6 +857,83 @@ best 36,975, +1.3 %), physics 51,213, combined 16,366, valid. See [Results](#res
 OCCT 3D Adaptive (Variable 20 min, Switch 20 min) is done: clean, but it stays below the 3,090 MHz edge (about
 3,037 MHz peak).
 
+### Without Afterburner (19 Nov)
+
+**Why.** Two things kept a tuning app in the daily path: an Afterburner profile does not store the XBAR offset
+(Q10), and a driver reset drops every setting (Q17). The setup had grown to Afterburner at logon, a logon task for
+XBAR and a task on the reset events. The goal was one small tray tool that applies everything, and no resident
+tuning app.
+
+**Read-only probe (measured, driver 621.24, about 15:00 UTC).** A small test program called the driver's own
+library, `nvapi64.dll`, through the private interfaces that tuning apps use, and only read:
+
+| Setting | What the driver returned |
+|---|---|
+| Curve offsets (private curve table) | the Afterburner Profile 1 offsets on 127 of 127 core points, no mismatch |
+| Power limit | 121.739 % of the default, which is 700 W (allowed range 69.565 to 121.739 %) |
+| XBAR offset (clock domains table, domain 1, byte offset `0x53C`) | 400000 kHz, the live +400 |
+| Memory offset (Pstates20, the public structure) | 0, although the memory clock read 17,001 MHz (+3000 set by Afterburner) |
+| Voltage boost | 0 (the slider does nothing on this driver, Q14) |
+
+The clock domains layout had been validated in public only up to driver 610.88 (source: rtx5090-xbar-control,
+below); it read correctly on 621.24.
+
+**Write test (measured, elevated, about 15:10 UTC).** Smallest steps first, each one read back:
+
+1. Curve table written back unchanged: accepted, read back identical (0 of 255 slots differ).
+2. Power limit written back unchanged: accepted, read back 121.739 %.
+3. XBAR offset 400 -> 300 -> 400 MHz: each value read back, the curve untouched.
+4. Memory +3000 through SetPstates20: accepted, memory clock 17,001 MHz, XBAR offset kept, but **all 127 core curve
+   offsets were zeroed** (two non-core slots kept their values).
+5. Curve restored natively from the saved copy: read back identical.
+
+No driver reset and no nvlddmkm or 4101 event. A light 720p GT1 run afterwards: core 3,270 MHz at 1.135 V, XBAR
+2,835 MHz, memory 17,001 MHz, no hang, 266 fps. The morning run on the same profile had the same 1.135 V top and
+XBAR at 2,827 MHz (274.1 fps; that test is CPU bound, so the clocks are the metric).
+
+**The order.** Power limit, memory offset, XBAR offset, curve last, then read the curve back. Because the memory
+write zeroes the curve, a profile that is refused half way ends on the stock curve, not on a wrong one.
+
+**What else it showed (measured unless marked):**
+
+- The memory offset set by Afterburner did not show in the Pstates20 read (0 at +3000). After the native write the
+  same read returned 3000000 kHz. Where Afterburner keeps it we do not know.
+- No voltage control this way: the voltage boost reads 0 and runtime Vrel offsets stay ignored on 621.x (Q14, Q27).
+  The voltage limit still comes from the VBIOS image ([Voltage lever](#voltage-lever)).
+- Writes need admin: an unelevated write is refused with -137, NVAPI's "invalid user privilege". Reads do not
+  (as recorded in the blackout-tray notes).
+- A zeroed buffer is silently ignored: read the table, change it, write it back (as recorded in the blackout-tray
+  notes).
+- The settings stay after the writing program has exited, until a driver reset or a restart: the light run above
+  ran after the test program had ended.
+
+**Result.** [blackout-tray](https://github.com/Xipzer/blackout-tray) now holds both final profiles: profile 1 (cap
+3,090, read from the card, identical to Afterburner slot 1 on 127 of 127 points) and profile 2 (cap 3,075, from the
+offsets in slot 2), each with power limit 121.739 % and memory +3000, plus the XBAR offset (+400). It applies them
+10 s after it starts, when the profile is switched or re-applied from its panel, and 15 s after a driver reset. It
+loads `nvapi64.dll` only while applying and polls nothing: a driver reset is noticed through a subscription to the
+System event log (Display 4101, nvlddmkm 14 and 153). **That reset path has not yet been exercised by a real driver
+reset.** Checked so far: profile 2 applied, then profile 1, each read back; memory 17,001 MHz, power limit 700 W,
+XBAR offset 400000 kHz, no driver events.
+
+Afterburner no longer starts with Windows (its logon task and the XBAR logon task are disabled). It stays installed
+as the fallback and for monitoring during tuning sessions: the 100 ms telemetry logger reads Afterburner's shared
+memory, so it only works while Afterburner runs.
+
+**Caveats.** These are private driver interfaces. NVIDIA does not document them, and a future driver can change or
+block them. Tested on one card and one driver. The tray tool applies a profile, it does not find one: the search
+and the stress tests still need a tuning app. Setup, buffer layouts and interface ids:
+[docs/gpu.md](https://github.com/Xipzer/blackout-tray/blob/main/docs/gpu.md).
+
+**Credit.** We did not work the layouts out ourselves. They come from these open-source projects and write-ups,
+checked again on our card before use:
+
+- XBAR and the clock domains table: https://github.com/SHANAjam/rtx5090-xbar-control (MIT)
+- Curve tables: https://github.com/arcnmx/nvapi-rs (MIT) and
+  https://vuplea.github.io/simple-nvidia-undervolt/DEVELOPMENT.html
+- Memory through Pstates20 and the curve reset it causes: https://erfi.dev/reference/vfctl-gpu-curve-tool/
+- The Afterburner developer naming the interfaces: https://www.overclock.net/posts/29608363/
+
 ### From start to finish
 
 | State | GT2 fps |
@@ -885,6 +978,10 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
 9. Why did the fallback window run slower with all four monitors on the 5090 (138 to 141 fps) than with one of them
    on the iGPU (153 to 162)? Not explained; it no longer matters once the run is fullscreen.
 10. Why did the MSVDD REL floor of 1,100 mV leave MSVDD at 1.07 to 1.09 V under load (Q16)?
+11. Does the native re-apply after a driver reset work in practice? The event subscription is in place but no real
+    reset has happened since ([Without Afterburner](#without-afterburner-19-nov)). And will the private interfaces
+    survive the next driver?
+12. Where does Afterburner keep its memory offset, if not in the Pstates20 value we read (Q29)?
 
 ## Lessons
 
@@ -921,6 +1018,8 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
 22. **A higher voltage limit moves heavy loads up the curve too.** A step that heavy loads could not reach before
     becomes reachable; extend the soft cap to where they can now go, and re-test heavy loads after any change to
     the top (Q28).
+23. **One write can undo another.** The native memory offset write zeroed the whole curve. Read everything back
+    after each write, and fix the order (Q29).
 
 ## What we got wrong
 

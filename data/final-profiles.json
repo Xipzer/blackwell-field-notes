@@ -4,12 +4,13 @@
  "common": {
   "power_limit": "700 W (VBIOS override, Afterburner 121 %)",
   "memory_offset_mhz": 3000,
-  "xbar_offset_mhz": "+400 at logon (Afterburner /wpXBARCLK_off,400; not stored in a profile, lost at every driver reset)",
+  "xbar_offset_mhz": "+400; not stored in an Afterburner profile, lost at every driver reset. Until 19 Nov sent at logon (Afterburner /wpXBARCLK_off,400); since 19 Nov written natively by blackout-tray at startup and after a driver reset",
+  "applied_by": "since 19 Nov: blackout-tray, natively through nvapi64.dll (power limit, memory offset, XBAR offset, curve last), at startup and after a driver reset; Afterburner installed but not started with Windows",
   "resizable_bar": "forced on with NVIDIA Profile Inspector / NVAPI DRS (rBAR - Enable, 0x000F00BA = 1) for the predefined 3DMark driver profiles: TimeSpy, Ice Storm (Fire Strike exes), Port Royal DLSS, Steel Nomad",
   "test": "Time Spy Extreme GT2, direct launch, borderless fullscreen 1920x1080 (is_windowed=false, is_borderless=true)"
  },
  "profile_1": {
-  "slot": "Afterburner slot 1 and Startup",
+  "slot": "blackout-tray profile 1 (applied at startup since 19 Nov); also Afterburner slot 1 and Startup",
   "cap_mhz": 3090,
   "cap_below_mv": 1060,
   "clock_mhz_by_mv": {
@@ -164,7 +165,7 @@
   }
  },
  "profile_2": {
-  "slot": "Afterburner slot 2",
+  "slot": "blackout-tray profile 2 (since 19 Nov); also Afterburner slot 2",
   "cap_mhz": 3075,
   "cap_below_mv": 1060,
   "clock_mhz_by_mv": {
