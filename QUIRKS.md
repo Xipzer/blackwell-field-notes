@@ -544,6 +544,25 @@ about 1.135 V read (about 1.145 V set, the REL 1,150 limit); the ALT +20 is not 
 
 Nothing public found on the offsets being ignored with `runtime_voltage_offsets=1` set.
 
+<a id="q28"></a>
+### Q28. A higher voltage limit moves heavy loads up the curve too
+
+**What we saw (measured, 19 Nov).** After the REL 1,150 image (Q27) raised the core limit from 1,120 to 1,170 mV,
+heavy loads no longer stayed at 1.015 to 1.035 V. A Fire Strike Ultra run ran heavy scenes at 3,180 to 3,217 MHz
+and 1.065 to 1.08 V: on the curve's step from 3,090 MHz (soft cap, up to 1,060 mV) to 3,247 MHz at 1,065 to
+1,070 mV. With the 1,120 mV limit heavy loads had never got there. Two driver resets followed in heavy scenes
+(19 Nov 00:06 and 09:28, about 610 to 620 W), last heavy samples 3,030 to 3,090 MHz at 1.03 to 1.055 V, then the
+usual power collapse. The evening before, one 4K TSE GT1 run at or under 1.02 V had suggested heavy loads would
+not use the new top; one load did not represent every heavy load.
+
+**Remedy.** Extend the soft cap to where heavy loads can now go and ramp the top above it. Here: every point up to
+1,100 mV at the wall (3,090 MHz Profile 1, 3,075 Profile 2), a straight ramp to 3,440 / 3,380 MHz at 1,150 mV, flat
+above. Result: TSE GT2 3 of 3 clean (176.6, 176.1, 176.2 fps, max 1.085 V, heavy load held at the wall), light 720p
+clean at 1.135 V, Fire Strike Ultra graphics 37,457 (+1.3 %), valid. After any change to the top of the curve,
+re-test a heavy load and log its voltage.
+
+Nothing public found.
+
 ---
 
 ## Clean measurement checklist

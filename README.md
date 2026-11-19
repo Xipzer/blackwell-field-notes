@@ -17,13 +17,23 @@ curve now lets light loads run 3,337 to 3,382 MHz instead of about 3,172 to 3,19
 voltage, so the soft cap is unchanged. Both profiles are saved with the new top; see
 [Voltage lever](#voltage-lever). Runtime voltage offsets through mVolt+ did not work on this driver (Q27).
 
+**Update (19 Nov, morning UTC): the soft cap now runs to 1,100 mV.** With the higher voltage limit, heavy loads
+also climbed higher: Fire Strike Ultra ran 3,180 to 3,217 MHz at 1.065 to 1.08 V, right on the old curve's step from
+3,090 to 3,247 MHz at 1,065 to 1,070 mV. Two driver resets followed in heavy scenes (about 610 to 620 W). The
+"heavy loads never reach that voltage" claim from the evening before was wrong (Q28). Fix: every point up to
+1,100 mV is now held at the wall (3,090 / 3,075 MHz), then a ramp to 3,440 / 3,380 MHz at 1,150 mV. TSE GT2 3 of 3
+clean at 176.1 to 176.6 fps; the 179.0 fps screening result came from the unsafe step and is withdrawn. Validated
+Fire Strike Ultra: **34,409 overall, 37,457 graphics** (+1.3 % over the previous best). See
+[Heavy loads climb too](#heavy-loads-climb-too-19-nov).
+
 ## Final profiles
 
 | | Profile 1 (max) | Profile 2 (one step down) |
 |---|---|---|
-| Curve | Profile 1 max curve, every point at or under 1,060 mV held to **3,090 MHz**; 3,247 MHz at 1,070 mV | the same, held to **3,075 MHz** |
-| Top of the curve (since 20:00, [Voltage lever](#voltage-lever)) | ramp from 3,247 MHz at 1,070 mV to **+255** at 1,170 mV: 1,100 mV 3,324, 1,125 mV 3,387, 1,150 mV 3,451, 1,170 mV 3,502 | ramp to **+195**: 1,100 mV 3,306, 1,125 mV 3,354, 1,150 mV 3,403, 1,170 mV 3,442 |
-| Light-load top ramp (720p GT1) | +255: 4 of 4 clean, up to 3,360 to 3,382 MHz read | +195: 4 of 4 clean, up to 3,337 to 3,345 MHz read |
+| Curve (since 19 Nov morning) | Profile 1 max curve, every point at or under **1,100 mV** held to **3,090 MHz** | the same, held to **3,075 MHz** |
+| Top of the curve (since 19 Nov, [Heavy loads climb too](#heavy-loads-climb-too-19-nov)) | straight ramp from 3,090 MHz at 1,100 mV to **3,440 MHz at 1,150 mV**, flat above: 1,110 mV 3,160, 1,125 mV 3,265, 1,140 mV 3,370, 1,150 and 1,170 mV 3,440 | ramp from 3,075 at 1,100 mV to **3,380 at 1,150 mV**, flat above: 1,110 mV 3,136, 1,125 mV 3,228, 1,140 mV 3,319, 1,150 and 1,170 mV 3,380 |
+| Top of the curve, 18 Nov 20:00 (replaced) | cap only up to 1,060 mV, 3,247 MHz at 1,070 mV, ramp to +255 at 1,170 mV (1,150 mV 3,451) | the same with +195 |
+| Light-load top (720p GT1) | 19 Nov shape: 1 of 1 clean, max 1.135 V; 18 Nov +255 ramp: 4 of 4 clean, up to 3,360 to 3,382 MHz read | 18 Nov +195 ramp: 4 of 4 clean, up to 3,337 to 3,345 MHz read |
 | VBIOS image | 700 W override with the NVVDD REL floor at 1,150 mV (core voltage limit 1,170 mV) | same |
 | Afterburner slot | 1 and Startup | 2 |
 | Power / memory | 700 W (VBIOS override, 121 %), memory +3000 | same |
@@ -31,7 +41,8 @@ voltage, so the soft cap is unchanged. Both profiles are saved with the new top;
 | GT2 fps, XBAR +300, ReBAR default | 172.8 to 173.4 | 171.9 to 173.4 |
 | GT2 fps, ReBAR forced, XBAR +300 | 175.4, 175.9, 175.9 (3 of 3 clean) | not run |
 | GT2 fps, ReBAR forced, XBAR +400 / +500 | 176.6 / 176.4 to 176.9 (1 and 3 runs, clean) | not run |
-| GT2 fps with the voltage top, ReBAR forced, XBAR +400 | **179.0** (1 run, clean; screening only) | not run |
+| GT2 fps, 19 Nov shape (cap to 1,100 mV + top ramp), ReBAR forced, XBAR +400 | **176.6, 176.1, 176.2** (3 of 3 clean, max 1.085 V) | not run |
+| Fire Strike Ultra, 3DMark app (19 Nov) | **34,409 overall, 37,457 graphics**, valid | not run |
 
 Applies to both:
 
@@ -40,7 +51,8 @@ Applies to both:
   (Q1). Nothing measured in the fallback window carries over.
 - **Resizable BAR forced for 3DMark** with NVIDIA Profile Inspector on the driver's "3DMark TimeSpy" profile:
   `rBAR - Enable` (0x000F00BA) = 1, size limit left empty. 173.0 and 173.5 fps before, 175.3 and 175.5 forced,
-  173.1 with it off again: +1.2 % (Q23).
+  173.1 with it off again: +1.2 % (Q23). Also forced for Fire Strike, Port Royal and Steel Nomad on their own
+  predefined driver profiles (Q23).
 - **Crossbar clock (XBAR) +400** through a logon task (`MSIAfterburner.exe /wpXBARCLK_off,400`), since the offset
   is not stored in a profile and is lost at every driver reset (Q10, Q17).
 - **6 clean runs prove little**: they only rule out hang rates above about 39 % (Q19). Profile 1 hung once in 7, so
@@ -89,11 +101,29 @@ After the voltage lever (measured, our harness, borderless fullscreen):
 |---|---|---|
 | Core voltage limit (mVolt+ `--status`, `nvvdd_max`) | 1,120 mV | 1,170 mV |
 | Light load (TSE GT1 at 720p, about 250 W): clock read | 3,172 to 3,195 MHz at 1.055 to 1.06 V | 3,360 to 3,382 MHz at up to 1.135 V (Profile 1, top +255) |
-| TSE GT2 fps, Profile 1, ReBAR forced, XBAR +400 | 176.6 | 179.0 (1 run, screening) |
+| TSE GT2 fps, Profile 1, ReBAR forced, XBAR +400 | 176.6 | 176.6, 176.1, 176.2 (19 Nov shape, 3 of 3 clean) |
 
 The light-load test is CPU bound at 720p (about 275 to 278 fps whatever the clock), so the clock is the metric
-there, not fps. The GT2 gain comes from lighter moments inside GT2 now reaching higher clocks; one run, so treat it
-as a screening result. No validated app score with the voltage top yet, and no game testing yet.
+there, not fps. The 179.0 fps GT2 run first reported here (18 Nov, 1 run) is **withdrawn**: it ran heavy moments on
+the old curve's step above 1,065 mV, the same place two driver resets came from the next morning (Q28). With the
+cap extended to 1,100 mV, GT2 is back at 176.1 to 176.6 fps, the same as before the voltage lever: in GT2 the gain
+was the unsafe step, not the new top.
+
+Validated 3DMark Fire Strike Ultra, official app run with a valid result, 19 Nov 2026 09:45 UTC, Profile 1 with the
+19 Nov shape (cap 3,090 MHz up to 1,100 mV, ramp to 3,440 MHz at 1,150 mV), XBAR +400, ReBAR forced on the driver
+profile that holds the Fire Strike exes (Q23) (measured):
+
+| | Score |
+|---|---|
+| Overall | **34,409** |
+| Graphics | **37,457** (previous best 36,975 on 18 Nov with the 3,090 cap and no voltage top: **+1.3 %**) |
+| Physics | 51,213 |
+| Combined | 16,366 |
+| 3DMark average / best for the same hardware | 32,300 / 42,152 (overall) |
+
+Two owner Fire Strike Ultra runs in between do not count: after a driver reset had wiped memory +3000 (memory clock
+read 13,801 / 14,001 MHz) and XBAR, one scored 33,184 graphics (31,833 overall); another without XBAR scored
+36,538 graphics (33,395 overall). A driver reset silently undoes both (Q17); check them before trusting a score.
 
 ### How this compares
 
@@ -164,6 +194,7 @@ Every quirk with what we saw, the remedy and public sources is in [QUIRKS.md](QU
 | [Q25](QUIRKS.md#q25) | Per-band offsets can make the curve non-monotonic and pin hangs on the wrong band | cap each point at the lowest clock above it (suffix minimum) | |
 | [Q26](QUIRKS.md#q26) | The voltage read at a hang sits about 10 mV under the V/F point in use | attribute hangs near a band edge to the band above | |
 | [Q27](QUIRKS.md#q27) | mVolt+ runtime NVVDD offsets on driver 621.24 report success but `rail_offsets_ignored_by_driver: true`, even with a `runtime_voltage_offsets=1` image; the core limit stays 1,120 mV | static route: VBIOS image `nvvdd_rel_equation_min_mv` 900 -> 1,150 (limit 1,170 mV after a restart) | none found |
+| [Q28](QUIRKS.md#q28) | Raising the core voltage limit moves heavy loads up the curve too: a clock step that was out of reach (1,065 to 1,070 mV here) becomes reachable and hangs | extend the soft cap to where heavy loads can now go (here 1,100 mV), ramp the top above it | none found |
 
 Before trusting any number, run the [clean measurement checklist](QUIRKS.md#clean-measurement-checklist).
 
@@ -218,7 +249,8 @@ Labels:
 | MSVDD REL floor 1,100 mV | 4 hangs in 9 runs vs 5 in 8 without: not a fix |
 | Afterburner voltage slider, `/wpNVVDD_off_Vrel` | no effect on driver 621.01 and later, which ignores runtime voltage offsets (source: Vix Editor and mVolt+ documentation) |
 | mVolt+ runtime NVVDD offsets (`--nvvdd-offsets 0,25,25`) on a `runtime_voltage_offsets=1` image | **ignored** on 621.24: success reported, `rail_offsets_ignored_by_driver: true`, limit stays 1,120 mV (Q27) |
-| **NVVDD REL floor 900 -> 1,150 mV in the image + a ramp on the curve top** | **core limit 1,120 -> 1,170 mV; light loads 3,337 to 3,382 MHz instead of about 3,180; heavy loads unchanged** ([Voltage lever](#voltage-lever)) |
+| **NVVDD REL floor 900 -> 1,150 mV in the image + a ramp on the curve top** | **core limit 1,120 -> 1,170 mV; light loads 3,337 to 3,382 MHz instead of about 3,180** ([Voltage lever](#voltage-lever)); but heavy loads climbed too and hit the old step at 1,065 to 1,070 mV (2 driver resets, Q28) |
+| **Soft cap extended to 1,100 mV, ramp 1,100 to 1,150 mV (19 Nov)** | **TSE GT2 3 of 3 clean (176.1 to 176.6 fps), Fire Strike Ultra graphics 37,457 (+1.3 %), valid** |
 | Memory +0 to +3000 at a fixed cap | +1.4 % fps from +0 to +3000; no effect on the hang |
 | Afterburner open or closed, `OEM=0` or `3`, nvidia-smi logger, CPU spin, P-core pinning | no fps difference |
 | FurMark, FurMark load steps, a CUDA load ramp, OCCT 3D Adaptive, Steel Nomad Stress Test | none reproduce the hang |
@@ -683,8 +715,10 @@ limit:
 Under load the voltage tops out at about 1.135 V read, about 1.145 V set, which is the REL 1,150 limit; the ALT
 +20 above it is not used (measured; the read sits about 10 mV under the point in use, Q26).
 
-**Who uses it (measured).** Heavy loads do not: 4K TSE GT1 (about 540 W) never went above 1.02 V / 3,075 MHz, so
-the soft cap and the GT2 hang work are unaffected. Light loads do: TSE GT1 at 720p (about 250 W) sits at the curve
+**Who uses it (measured, 18 Nov; corrected 19 Nov).** On 18 Nov 4K TSE GT1 (about 540 W) never went above
+1.02 V / 3,075 MHz, and we concluded heavy loads do not use the new top. That was wrong: the next morning Fire
+Strike Ultra and GT2 ran heavy scenes at 1.065 to 1.085 V (see [Heavy loads climb too](#heavy-loads-climb-too-19-nov)).
+Light loads do: TSE GT1 at 720p (about 250 W) sits at the curve
 top, 3,172 to 3,195 MHz at 1.055 to 1.06 V with the old flat top.
 
 **Ladder (measured).** Top of the Profile 1 curve as a straight ramp from 3,247 MHz at 1,070 mV to 3,247 + D at
@@ -709,12 +743,62 @@ is the metric.
 1,170 3,502), slot 1 and Startup. Profile 2 = cap 3,075 + top +195 (1,100 mV 3,306, 1,150 3,403, 1,170 3,442), one
 step under, slot 2. Both keep 3,247 MHz at 1,070 mV.
 
-**Heavy check (measured, 1 run).** TSE GT2 on the new Profile 1: **179.0 fps, clean** (176.6 before, same ReBAR and
-XBAR +400). The heaviest scenes stay under the cap; the lighter moments inside GT2 now reach higher clocks. One
-run: a screening result, not yet a reliability count.
+**Heavy check (measured, 1 run; withdrawn 19 Nov).** TSE GT2 on that Profile 1 gave 179.0 fps, clean (176.6
+before). We read it as lighter moments inside GT2 reaching higher clocks. The next morning showed heavy scenes
+running on the 3,247 MHz step above 1,065 mV instead, the step that then caused two driver resets; the 179.0 is not
+a result of a safe profile and is withdrawn.
 
-**Still open.** Real games (light, CPU bound loads are exactly where the new top runs), a 3DMark app run with a
-valid score, and the 10 to 12 run final pass.
+### Heavy loads climb too (19 Nov)
+
+**Two crashes (measured).** Both in owner loads with Profile 1 as saved at 20:00 the evening before:
+
+| Time (UTC) | Load | Last heavy samples before the power collapse |
+|---|---|---|
+| 19 Nov 00:06 | owner load, about 615 W | 3,030 to 3,090 MHz at 1.04 to 1.055 V; nvlddmkm 14/153 TDR |
+| 19 Nov 09:28 | Fire Strike Ultra, XBAR +400 | 3,030 to 3,052 MHz at 1.03 to 1.045 V, about 610 to 620 W |
+
+Both have the hang signature from section 4 (power collapses while usage stays at the top). Before the REL
+1,150 image the same kind of heavy load ran at 1.015 to 1.035 V; now it ran at 1.03 to 1.055 V.
+
+**Why (measured, plus our reading).** A Fire Strike Ultra run just before the second crash (09:22 to 09:24) ran
+**3,180 to 3,217 MHz at 1.065 to 1.08 V** in heavy scenes. That is the old curve's step: the soft cap held 3,090 MHz
+only up to 1,060 mV, then the curve jumped to 3,247 MHz at 1,065 to 1,070 mV. With the old 1,120 mV limit heavy
+loads never got near it; with the 1,170 mV limit the driver moves them up the curve too, and the step became
+reachable. The cause we judged: the shape of the curve between 1,060 and 1,100 mV, not the light-load top itself
+(Q28). The read voltages at the hang sit about 10 mV under the point in use (Q26).
+
+**Fix (measured).** Extend the soft cap to where heavy loads can now go, and start the ramp above it:
+
+| mV | Profile 1 | Profile 2 |
+|---|---|---|
+| 950 | 3,015 | 3,015 |
+| 1,000 to 1,100 | **3,090** (flat) | **3,075** (flat) |
+| 1,110 | 3,160 | 3,136 |
+| 1,125 | 3,265 | 3,228 |
+| 1,140 | 3,370 | 3,319 |
+| 1,150 and 1,170 | **3,440** (flat) | **3,380** (flat) |
+
+Saved 19 Nov 09:29 to Afterburner slot 1 and Startup (Profile 1) and slot 2 (Profile 2). Points up to 950 mV are
+unchanged.
+
+**Checks (measured, borderless fullscreen, XBAR +400, ReBAR forced):**
+
+| Run | Result | Max voltage |
+|---|---|---|
+| TSE GT2 1 | 176.6 fps, clean | 1.085 V |
+| TSE GT2 2 | 176.1 fps, clean | 1.085 V |
+| TSE GT2 3 | 176.2 fps, clean | 1.085 V |
+| Light 720p GT1 | 274.1 fps, clean | 1.135 V |
+
+GT2 still spends about half its heavy samples at or above 1.06 V (292 to 357 of 650 samples), now at the 3,090 MHz
+wall instead of on the step, and the light load still reaches the top of the voltage range. GT2 fps is back to the
+pre-lever 176.6: the 179.0 came from the step.
+
+**Validated (measured).** Fire Strike Ultra app run, 19 Nov 09:45: 34,409 overall, **37,457 graphics** (previous
+best 36,975, +1.3 %), physics 51,213, combined 16,366, valid. See [Results](#results).
+
+**Still open.** Real games (light, CPU bound loads are where the new top runs), a Time Spy Extreme app run with the
+19 Nov shape, and the 10 to 12 run final pass.
 
 ### From start to finish
 
@@ -725,7 +809,8 @@ valid score, and the 10 to 12 run final pass.
 | + soft cap (stable) | about 173 |
 | + ReBAR forced | 175.4 to 175.9 |
 | + XBAR +400 | **176.6** |
-| + voltage top (REL floor 1,150 mV, top +255) | 179.0 (1 run, screening) |
+| + voltage top (REL floor 1,150 mV, top +255), 18 Nov | 179.0 (1 run; withdrawn, it ran on the unsafe step, Q28) |
+| + soft cap to 1,100 mV, ramp to 3,440 at 1,150 mV, 19 Nov | 176.6, 176.1, 176.2 (3 of 3 clean) |
 
 The first jump is a measurement fix, not a speed-up the card gained: the old harness rendered a lighter load.
 The real gains on top of a correct measurement are ReBAR (+1.2 %) and XBAR (+0.5 % from +300 to +400, +2.6 % from
@@ -744,8 +829,9 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
 2. Was the higher rate with a cold core real? Our guess was extra temperature bins; but the hangs also came at 46
    to 49 C, and many cold runs were windowed harness runs.
 3. Would a higher NVVDD REL floor help? Answered for light loads: yes, it lifts the core limit to 1,170 mV and
-   light loads gain about 140 to 210 MHz ([Voltage lever](#voltage-lever)). Heavy loads never reach that voltage,
-   so it does nothing for the GT2 hang. Do games gain, and does the new top hold in them?
+   light loads gain about 140 to 210 MHz ([Voltage lever](#voltage-lever)). Heavy loads climb up the curve too, so
+   the soft cap had to be extended to 1,100 mV (Q28); GT2 gains nothing. Do games gain, and does the new top hold
+   in them?
 4. After one reboot, direct GT2 launches ran at about 90 fps instead of 149, capped or not, then later went back to
    149. We did not find out why; the hang results look the same in both states. After section 7 a display or
    adapter state is the first suspect, but we did not check the window then.
@@ -791,6 +877,9 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
     the limit back (Q27). The static VBIOS field did what the runtime call did not.
 21. **Find the load that uses the change.** The voltage top is invisible in heavy GT2 at 4K and obvious in a light
     720p run; test where the card actually sits at the top of the curve.
+22. **A higher voltage limit moves heavy loads up the curve too.** A step that heavy loads could not reach before
+    becomes reachable; extend the soft cap to where they can now go, and re-test heavy loads after any change to
+    the top (Q28).
 
 ## What we got wrong
 
@@ -811,6 +900,9 @@ SPEEDO 2109, about a third into its fuse range (Q16). A heavy-load wall at about
 - **"This chip's REL is about 1,070 mV."** That is MSVDD's Vrel; NVVDD's is 1,120 mV (Q16).
 - **"Hangs need margin at every voltage; caps do not add it."** True for `-lgc` caps in the window, wrong as a rule:
   in fullscreen, per-band margin never stopped the hangs, and a soft cap written into the curve did (section 8).
+- **"Heavy loads never reach the new voltage top"** (18 Nov 20:00). Based on one 4K GT1 run. With the 1,170 mV limit
+  heavy Fire Strike Ultra scenes ran at 1.065 to 1.08 V, hit the old step at 1,065 to 1,070 mV and caused two driver resets; the
+  179.0 fps GT2 result came from that step and is withdrawn (Q28).
 - **The fps "states" as a GPU effect.** We tested memory offset, stock curve, Afterburner monitoring, out of warranty
   mode, XBAR, CPU idle and thread placement before finding the display path (section 7).
 

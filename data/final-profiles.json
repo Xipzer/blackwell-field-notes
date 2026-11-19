@@ -1,11 +1,11 @@
 {
- "name": "Final profiles, 18 Nov 2026",
+ "name": "Final profiles, 18 Nov 2026 (top of the curve reshaped 19 Nov)",
  "rule": "Profile 1 curve (data/profile1-curve.json) with every point at or under 1060 mV held to at most the cap (a flat stretch), points above 1060 mV untouched so light loads still reach about 3247 MHz at higher voltage. Written as per-point offsets in the Afterburner profile file.",
  "common": {
   "power_limit": "700 W (VBIOS override, Afterburner 121 %)",
   "memory_offset_mhz": 3000,
   "xbar_offset_mhz": "+400 at logon (Afterburner /wpXBARCLK_off,400; not stored in a profile, lost at every driver reset)",
-  "resizable_bar": "forced on for the 3DMark Time Spy driver profile with NVIDIA Profile Inspector (rBAR - Enable, 0x000F00BA = 1, size limit left empty)",
+  "resizable_bar": "forced on with NVIDIA Profile Inspector / NVAPI DRS (rBAR - Enable, 0x000F00BA = 1) for the predefined 3DMark driver profiles: TimeSpy, Ice Storm (Fire Strike exes), Port Royal DLSS, Steel Nomad",
   "test": "Time Spy Extreme GT2, direct launch, borderless fullscreen 1920x1080 (is_windowed=false, is_borderless=true)"
  },
  "profile_1": {
@@ -77,8 +77,40 @@
    "1150": 3451,
    "1170": 3502
   },
-  "gt2_fps_with_voltage_top": "179.0 (1 run, clean, ReBAR forced, XBAR +400; screening)",
-  "clock_mhz_by_mv_note": "clock_mhz_by_mv is the curve before the voltage top (18 Nov 20:00 UTC); above 1070 mV the saved curve follows top_points_mhz_by_mv"
+  "gt2_fps_with_voltage_top": "withdrawn: 179.0 (18 Nov, 1 run) ran heavy scenes on the old step above 1065 mV, the step that caused two driver resets on 19 Nov",
+  "clock_mhz_by_mv_note": "clock_mhz_by_mv is the curve before the voltage top (18 Nov 20:00 UTC); since 19 Nov 09:29 every point up to 1100 mV is capped at 3090 and the top follows vfix_19_nov; top_points_mhz_by_mv is the replaced 18 Nov top",
+  "vfix_19_nov": {
+   "saved": "2026-11-19 09:29 UTC",
+   "cap_below_mv": 1100,
+   "cap_mhz": 3090,
+   "rule": "points at or under 1100 mV capped at the wall, straight ramp from 1100 to 1150 mV, flat above; points up to 950 mV unchanged",
+   "anchor_points_mhz_by_mv": {
+    "950": 3015,
+    "1000": 3090,
+    "1060": 3090,
+    "1070": 3090,
+    "1100": 3090,
+    "1110": 3160,
+    "1125": 3265,
+    "1140": 3370,
+    "1150": 3440,
+    "1170": 3440
+   },
+   "checks": {
+    "tse_gt2": "176.6, 176.1, 176.2 fps, 3 of 3 clean, max 1.085 V",
+    "light_720p_gt1": "274.1 fps, clean, max 1.135 V"
+   }
+  },
+  "validated_fire_strike_ultra": {
+   "date": "2026-11-19",
+   "run": "3DMark app, valid result",
+   "overall": 34409,
+   "graphics": 37457,
+   "physics": 51213,
+   "combined": 16366,
+   "previous_best_graphics": 36975,
+   "settings": "19 Nov shape, XBAR +400, ReBAR forced (3DMark Ice Storm driver profile, holds the Fire Strike exes)"
+  }
  },
  "profile_2": {
   "slot": "Afterburner slot 2",
@@ -138,7 +170,25 @@
    "1150": 3403,
    "1170": 3442
   },
-  "clock_mhz_by_mv_note": "clock_mhz_by_mv is the curve before the voltage top (18 Nov 20:00 UTC); above 1070 mV the saved curve follows top_points_mhz_by_mv"
+  "clock_mhz_by_mv_note": "clock_mhz_by_mv is the curve before the voltage top (18 Nov 20:00 UTC); since 19 Nov 09:29 every point up to 1100 mV is capped at 3075 and the top follows vfix_19_nov; top_points_mhz_by_mv is the replaced 18 Nov top",
+  "vfix_19_nov": {
+   "saved": "2026-11-19 09:29 UTC",
+   "cap_below_mv": 1100,
+   "cap_mhz": 3075,
+   "rule": "points at or under 1100 mV capped at the wall, straight ramp from 1100 to 1150 mV, flat above; points up to 950 mV unchanged",
+   "anchor_points_mhz_by_mv": {
+    "950": 3015,
+    "1000": 3075,
+    "1060": 3075,
+    "1070": 3075,
+    "1100": 3075,
+    "1110": 3136,
+    "1125": 3228,
+    "1140": 3319,
+    "1150": 3380,
+    "1170": 3380
+   }
+  }
  },
  "cap_ladder": {
   "3045": "3 of 3 clean, 172.7 to 173.5 fps",
@@ -161,6 +211,7 @@
    "+255": "clean, 3382; reliability 3 of 3 clean (3360 to 3367)",
    "+315": "hung, driver reset after 16 s at 3457 MHz / 1.145 V"
   },
-  "note": "the 720p light test is CPU bound (about 275 to 278 fps), so clocks are the metric; game validation pending"
+  "note": "the 720p light test is CPU bound (about 275 to 278 fps), so clocks are the metric; game validation pending",
+  "heavy_loads_19_nov": "with the 1170 mV limit heavy loads ran at 1.065 to 1.08 V (Fire Strike Ultra 3180 to 3217 MHz) on the old 1065 to 1070 mV step; two driver resets (19 Nov 00:06 and 09:28, about 610 to 620 W); fix = cap to 1100 mV (QUIRKS Q28)"
  }
 }
