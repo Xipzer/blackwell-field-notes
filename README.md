@@ -26,6 +26,14 @@ clean at 176.1 to 176.6 fps; the 179.0 fps screening result came from the unsafe
 Fire Strike Ultra: **34,409 overall, 37,457 graphics** (+1.3 % over the previous best). See
 [Heavy loads climb too](#heavy-loads-climb-too-19-nov).
 
+**Update (19 Nov, late morning UTC): final config validated.** Owner 3DMark app runs on the final config (Profile 1
+with the 19 Nov shape, REL 1,150 image, XBAR +400, ReBAR forced on all four 3DMark driver profiles): Time Spy
+Extreme **25,025 overall, 29,380 graphics** (new best, +0.4 % graphics), Fire Strike Ultra run 2 **34,563 overall,
+37,465 graphics** (new best, within 8 graphics points of run 1), Steel Nomad 16,523 (no gain), Steel Nomad Stress
+Test **99.3 %**, 20 loops, clean. Heavy loads now draw about 45 W more for the same Steel Nomad score; see
+[Results](#results) and the caveat in [Voltage lever](#voltage-lever). An OCCT 3D Adaptive (Variable and Switch)
+run on the final config is in progress; no result is claimed here yet.
+
 ## Final profiles
 
 | | Profile 1 (max) | Profile 2 (one step down) |
@@ -42,7 +50,10 @@ Fire Strike Ultra: **34,409 overall, 37,457 graphics** (+1.3 % over the previous
 | GT2 fps, ReBAR forced, XBAR +300 | 175.4, 175.9, 175.9 (3 of 3 clean) | not run |
 | GT2 fps, ReBAR forced, XBAR +400 / +500 | 176.6 / 176.4 to 176.9 (1 and 3 runs, clean) | not run |
 | GT2 fps, 19 Nov shape (cap to 1,100 mV + top ramp), ReBAR forced, XBAR +400 | **176.6, 176.1, 176.2** (3 of 3 clean, max 1.085 V) | not run |
-| Fire Strike Ultra, 3DMark app (19 Nov) | **34,409 overall, 37,457 graphics**, valid | not run |
+| Fire Strike Ultra, 3DMark app (19 Nov) | run 1 34,409 overall, 37,457 graphics; run 2 **34,563 overall, 37,465 graphics** (best), both valid | not run |
+| Time Spy Extreme, 3DMark app (19 Nov) | **25,025 overall, 29,380 graphics**, valid, GT2 held 3,090 MHz | not run |
+| Steel Nomad, 3DMark app (19 Nov) | 16,523 (165.24 fps), valid | not run |
+| Steel Nomad Stress Test (19 Nov) | **99.3 %**, 20 loops, best 16,539, worst 16,426, clean | not run |
 
 Applies to both:
 
@@ -125,10 +136,27 @@ Two owner Fire Strike Ultra runs in between do not count: after a driver reset h
 read 13,801 / 14,001 MHz) and XBAR, one scored 33,184 graphics (31,833 overall); another without XBAR scored
 36,538 graphics (33,395 overall). A driver reset silently undoes both (Q17); check them before trusting a score.
 
+### Final config, 19 Nov (measured)
+
+Owner 3DMark app runs, all valid, on the final config: Profile 1 with the 19 Nov shape (cap 3,090 MHz up to
+1,100 mV, ramp to 3,440 MHz at 1,150 mV), the REL 1,150 image, XBAR +400, ReBAR forced on all four 3DMark driver
+profiles (TimeSpy, Ice Storm, Port Royal DLSS, Steel Nomad), 700 W, memory +3000.
+
+| Test | Result | Before |
+|---|---|---|
+| Time Spy Extreme | **25,025 overall, 29,380 graphics** (+0.4 %), CPU 13,602; GT2 clock held at 3,090 MHz | 24,961 / 29,265 (18 Nov, before the voltage lever) |
+| Fire Strike Ultra run 2 | **34,563 overall, 37,465 graphics**, physics 51,248, combined 16,704 | run 1: 34,409 / 37,457 (repeatable within 8 graphics points) |
+| Steel Nomad | 16,523 (165.24 fps) | 18 Nov stress loops 16,492 to 16,645: no gain |
+| Steel Nomad Stress Test | **99.3 %**, 20 loops, best 16,539, worst 16,426, clean | 99.1 %, best 16,645, worst 16,492 (18 Nov, before the voltage lever, no ReBAR) |
+
+Time Spy Extreme and Fire Strike Ultra are new bests. Steel Nomad gains nothing from ReBAR or the voltage top. The
+stress test is the long heavy-load reliability pass of the final config. An OCCT 3D Adaptive run (Variable, then
+Switch) on the same config is in progress at the time of writing; its result is not in this document.
+
 ### How this compares
 
-3DMark's search for i9-14900KS + RTX 5090, sorted by overall score (about 3,270 results), put this run at
-**rank 92, about the top 3 %** (measured, 18 Nov). The overall score is about 10 % above the 3DMark average for the
+3DMark's search for i9-14900KS + RTX 5090, sorted by overall score (about 3,270 results), put the 18 Nov Time
+Spy Extreme run (24,961) at **rank 92, about the top 3 %** (measured, 18 Nov; the 19 Nov 25,025 was not re-ranked). The overall score is about 10 % above the 3DMark average for the
 same hardware.
 
 Ranks 1 to 7 are extreme-overclocking team entries: GPU core 3,457 to 3,547 MHz, memory 2,250 MHz, CPU 6.2 to
@@ -721,6 +749,12 @@ Strike Ultra and GT2 ran heavy scenes at 1.065 to 1.085 V (see [Heavy loads clim
 Light loads do: TSE GT1 at 720p (about 250 W) sits at the curve
 top, 3,172 to 3,195 MHz at 1.055 to 1.06 V with the old flat top.
 
+**Caveat: heavy loads pay for it in power (measured, 19 Nov).** With the REL 1,150 image heavy loads ride up the
+flat cap region of the curve. Steel Nomad on the final config ran 3,030 to 3,037 MHz at 1.035 to 1.04 V and 660 to
+678 W, against about 2,977 MHz at 1.01 V and about 625 W on 18 Nov: about 45 W more, closer to the 700 W limit, for
+the same score (16,523 against 16,492 to 16,645). The higher voltage limit only pays off in lighter loads (Fire
+Strike Ultra graphics +1.3 %); in heavy loads it costs power and buys nothing.
+
 **Ladder (measured).** Top of the Profile 1 curve as a straight ramp from 3,247 MHz at 1,070 mV to 3,247 + D at
 1,170 mV, light 720p GT1, 1 run per screening step:
 
@@ -797,8 +831,11 @@ pre-lever 176.6: the 179.0 came from the step.
 **Validated (measured).** Fire Strike Ultra app run, 19 Nov 09:45: 34,409 overall, **37,457 graphics** (previous
 best 36,975, +1.3 %), physics 51,213, combined 16,366, valid. See [Results](#results).
 
-**Still open.** Real games (light, CPU bound loads are where the new top runs), a Time Spy Extreme app run with the
-19 Nov shape, and the 10 to 12 run final pass.
+**Validated later the same morning (measured):** Fire Strike Ultra run 2 34,563 / 37,465 graphics, Time Spy Extreme
+25,025 / 29,380 graphics, Steel Nomad Stress Test 99.3 % (see [Final config, 19 Nov](#final-config-19-nov-measured)).
+
+**Still open.** Real games (light, CPU bound loads are where the new top runs), the OCCT 3D Adaptive run in
+progress, and the 10 to 12 run final pass.
 
 ### From start to finish
 

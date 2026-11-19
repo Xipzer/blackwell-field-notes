@@ -110,7 +110,49 @@
    "combined": 16366,
    "previous_best_graphics": 36975,
    "settings": "19 Nov shape, XBAR +400, ReBAR forced (3DMark Ice Storm driver profile, holds the Fire Strike exes)"
-  }
+  },
+  "validated_fire_strike_ultra_run_2": {
+   "date": "2026-11-19",
+   "run": "3DMark app, valid result",
+   "overall": 34563,
+   "graphics": 37465,
+   "physics": 51248,
+   "combined": 16704,
+   "note": "best Fire Strike Ultra; run 1 graphics 37457, repeatable within 8 graphics points",
+   "settings": "final config: 19 Nov shape, REL 1150 image, XBAR +400, ReBAR forced"
+  },
+  "validated_tse_19_nov": {
+   "date": "2026-11-19",
+   "run": "3DMark app, valid result",
+   "overall": 25025,
+   "graphics": 29380,
+   "cpu": 13602,
+   "previous_best": {
+    "overall": 24961,
+    "graphics": 29265
+   },
+   "graphics_gain_pct": 0.4,
+   "gt2_clock_mhz": 3090,
+   "settings": "final config: 19 Nov shape, REL 1150 image, XBAR +400, ReBAR forced"
+  },
+  "validated_steel_nomad_19_nov": {
+   "date": "2026-11-19",
+   "run": "3DMark app, valid result",
+   "score": 16523,
+   "fps": 165.24,
+   "note": "no gain vs 18 Nov stress loops 16492 to 16645 (no ReBAR, before the voltage lever)",
+   "telemetry": "3030 to 3037 MHz at 1.035 to 1.04 V, 660 to 678 W (18 Nov: about 2977 MHz at 1.01 V, about 625 W): about 45 W more for the same score"
+  },
+  "steel_nomad_stress_test_19_nov": {
+   "date": "2026-11-19",
+   "run": "3DMark app, 20 loops",
+   "stability_pct": 99.3,
+   "best_loop": 16539,
+   "worst_loop": 16426,
+   "result": "passed, clean; long heavy-load reliability pass of the final config",
+   "previous": "18 Nov 99.1 %, best 16645, worst 16492"
+  },
+  "occt_19_nov": "OCCT 3D Adaptive Variable then Switch on the final config in progress at the time of writing; no result recorded here"
  },
  "profile_2": {
   "slot": "Afterburner slot 2",
@@ -212,6 +254,7 @@
    "+315": "hung, driver reset after 16 s at 3457 MHz / 1.145 V"
   },
   "note": "the 720p light test is CPU bound (about 275 to 278 fps), so clocks are the metric; game validation pending",
-  "heavy_loads_19_nov": "with the 1170 mV limit heavy loads ran at 1.065 to 1.08 V (Fire Strike Ultra 3180 to 3217 MHz) on the old 1065 to 1070 mV step; two driver resets (19 Nov 00:06 and 09:28, about 610 to 620 W); fix = cap to 1100 mV (QUIRKS Q28)"
+  "heavy_loads_19_nov": "with the 1170 mV limit heavy loads ran at 1.065 to 1.08 V (Fire Strike Ultra 3180 to 3217 MHz) on the old 1065 to 1070 mV step; two driver resets (19 Nov 00:06 and 09:28, about 610 to 620 W); fix = cap to 1100 mV (QUIRKS Q28)",
+  "heavy_load_power_caveat_19_nov": "with REL 1150 heavy loads ride up the flat cap region: Steel Nomad 3030 to 3037 MHz at 1.035 to 1.04 V, 660 to 678 W vs 18 Nov about 2977 MHz at 1.01 V, about 625 W; about 45 W more for the same score. The voltage raise only pays off in lighter loads (Fire Strike Ultra)."
  }
 }
