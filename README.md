@@ -790,7 +790,7 @@ unchanged.
 | TSE GT2 3 | 176.2 fps, clean | 1.085 V |
 | Light 720p GT1 | 274.1 fps, clean | 1.135 V |
 
-GT2 still spends about half its heavy samples at or above 1.06 V (292 to 357 of 650 samples), now at the 3,090 MHz
+GT2 still spends about half its time at or above 1.06 V (292 to 357 of about 650 samples per run), now at the 3,090 MHz
 wall instead of on the step, and the light load still reaches the top of the voltage range. GT2 fps is back to the
 pre-lever 176.6: the 179.0 came from the step.
 
