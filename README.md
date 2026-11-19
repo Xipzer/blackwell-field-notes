@@ -31,8 +31,9 @@ with the 19 Nov shape, REL 1,150 image, XBAR +400, ReBAR forced on all four 3DMa
 Extreme **25,025 overall, 29,380 graphics** (new best, +0.4 % graphics), Fire Strike Ultra run 2 **34,563 overall,
 37,465 graphics** (new best, within 8 graphics points of run 1), Steel Nomad 16,523 (no gain), Steel Nomad Stress
 Test **99.3 %**, 20 loops, clean. Heavy loads now draw about 45 W more for the same Steel Nomad score; see
-[Results](#results) and the caveat in [Voltage lever](#voltage-lever). An OCCT 3D Adaptive (Variable and Switch)
-run on the final config is in progress; no result is claimed here yet.
+[Results](#results) and the caveat in [Voltage lever](#voltage-lever). OCCT 3D Adaptive on the final config,
+Variable 20 min then Switch 20 min: no errors, no driver resets (it peaks at about 3,037 MHz, so it does not reach the
+3,090 MHz heavy-load edge; the 3DMark runs cover that).
 
 ## Final profiles
 
@@ -148,10 +149,12 @@ profiles (TimeSpy, Ice Storm, Port Royal DLSS, Steel Nomad), 700 W, memory +3000
 | Fire Strike Ultra run 2 | **34,563 overall, 37,465 graphics**, physics 51,248, combined 16,704 | run 1: 34,409 / 37,457 (repeatable within 8 graphics points) |
 | Steel Nomad | 16,523 (165.24 fps) | 18 Nov stress loops 16,492 to 16,645: no gain |
 | Steel Nomad Stress Test | **99.3 %**, 20 loops, best 16,539, worst 16,426, clean | 99.1 %, best 16,645, worst 16,492 (18 Nov, before the voltage lever, no ReBAR) |
+| OCCT 3D Adaptive (Personal 17.1.12, load type Light) | Variable 20 min, then Switch 20 min: **no errors detected, no driver resets** | earlier run on the old Profile 1: Variable and Switch (19 + 10 min) pass |
 
 Time Spy Extreme and Fire Strike Ultra are new bests. Steel Nomad gains nothing from ReBAR or the voltage top. The
-stress test is the long heavy-load reliability pass of the final config. An OCCT 3D Adaptive run (Variable, then
-Switch) on the same config is in progress at the time of writing; its result is not in this document.
+stress test is the long heavy-load reliability pass of the final config. The OCCT run is clean, with a caveat
+measured from telemetry: OCCT never drove the core above about 3,037 MHz (Variable) and peaked at about 636 W and
+1.10 V, so it does not reach the 3,090 MHz heavy-load edge. That edge is covered by the 3DMark runs above.
 
 ### How this compares
 
@@ -834,8 +837,9 @@ best 36,975, +1.3 %), physics 51,213, combined 16,366, valid. See [Results](#res
 **Validated later the same morning (measured):** Fire Strike Ultra run 2 34,563 / 37,465 graphics, Time Spy Extreme
 25,025 / 29,380 graphics, Steel Nomad Stress Test 99.3 % (see [Final config, 19 Nov](#final-config-19-nov-measured)).
 
-**Still open.** Real games (light, CPU bound loads are where the new top runs), the OCCT 3D Adaptive run in
-progress, and the 10 to 12 run final pass.
+**Still open.** Real games (light, CPU bound loads are where the new top runs) and the 10 to 12 run final pass.
+OCCT 3D Adaptive (Variable 20 min, Switch 20 min) is done: clean, but it stays below the 3,090 MHz edge (about
+3,037 MHz peak).
 
 ### From start to finish
 

@@ -152,7 +152,16 @@
    "result": "passed, clean; long heavy-load reliability pass of the final config",
    "previous": "18 Nov 99.1 %, best 16645, worst 16492"
   },
-  "occt_19_nov": "OCCT 3D Adaptive Variable then Switch on the final config in progress at the time of writing; no result recorded here"
+  "occt_19_nov": {
+   "date": "2026-11-19",
+   "tool": "OCCT Personal 17.1.12, 3D Adaptive, load type Light",
+   "run": "Variable 20 min, then Switch 20 min",
+   "result": "no errors detected, no driver resets",
+   "max_core_mhz": 3037,
+   "max_power_w": 636,
+   "max_voltage_v": 1.10,
+   "caveat": "measured from telemetry: OCCT never drove the core above about 3037 MHz (Variable), so it does not reach the 3090 MHz heavy-load edge; that edge is covered by the 3DMark runs"
+  }
  },
  "profile_2": {
   "slot": "Afterburner slot 2",
