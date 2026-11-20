@@ -89,7 +89,7 @@
    },
    "bytes_changed_vs_base": 101,
    "loaded": "2026-11-18 19:20 UTC, applied at the next restart; running image verified byte for byte",
-   "note": "raises the NVVDD REL floor above the chip's computed Vrel (1120 mV); mVolt+ --status after the restart: nvvdd_max 1170 mV (REL 1150 + ALT 20). Under load the voltage tops out at about 1.135 V read (about 1.145 V set); light loads only"
+   "note": "raises the NVVDD REL floor above the chip's computed Vrel (1120 mV); mVolt+ --status after the restart: nvvdd_max 1170 mV (REL 1150 + ALT 20). Under load the voltage tops out at about 1.135 V read (about 1.145 V set). An earlier note here said light loads only; heavy loads use the higher limit too (19 and 20 Nov, see nvvdd_rel_floor_1150 below)"
   }
  ],
  "other_stock_values": {
@@ -105,6 +105,7 @@
   "rel_ceiling_1150": "no measurable effect. Afterburner's extended report (data/afterburner-report.json) shows NVVDD Vrel 1120 mV and MSVDD Vrel 1070 mV; an earlier note here said the chip's NVVDD REL was about 1070 mV, which mixed up the rails",
   "msvdd_floor_1100": "GT2 hang rate 4 of 9 (one hard freeze) vs 5 of 8 without; not a fix. HWiNFO still read MSVDD at 1.07 to 1.09 V under load with it loaded",
   "stock_vbios_600w": "Profile 1 hard-hung on GT2 run 1: the override is not the cause of the hangs",
-  "nvvdd_rel_floor_1150": "core voltage limit 1120 -> 1170 mV; light 720p TSE GT1 3172-3195 MHz at 1.055-1.06 V before, up to 3360-3382 MHz at 1.135 V with the curve top ramped +255; 4K TSE GT1 (about 540 W) stays at or under 1.02 V, so heavy loads are unaffected"
+  "nvvdd_rel_floor_1150": "core voltage limit 1120 -> 1170 mV; light 720p TSE GT1 3172-3195 MHz at 1.055-1.06 V before, up to 3360-3382 MHz at 1.135 V with the curve top ramped +255; 4K TSE GT1 (about 540 W) stayed at or under 1.02 V in one run on 18 Nov. The conclusion first written here, that heavy loads are unaffected, was wrong: on 19 Nov heavy loads climbed to 1.065 to 1.08 V (QUIRKS Q28), and on 20 Nov a direct test of the curve top on this image showed heavy loads at 1.03 to 1.06 V with a raised top against about 0.98 V with a flat top",
+  "raised_top_cost_20_nov": "same image, one variable (curve top raised to 3440 MHz at 1150 mV against flat at 3090 MHz), 5 runs each, alternating: the raised top buys 1.6 to 2.8 % more fps in TSE GT1, GT2 and Steel Nomad for 79 to 114 W more mean power; peaks 620 to 668 W against at most 595 W (card's own readings). An earlier claim in these notes that this image costs about 45 W in heavy loads for no score was never tested directly and is withdrawn. The image on its own (old image against this one, same curve) is still untested. See data/raised-top-and-efficiency.json"
  }
 }

@@ -5,7 +5,7 @@ anyone else reporting the same thing. Short index in the [README](README.md#quir
 
 Labels as in the README: **Measured** (our logs), **Source** (public, linked), **Estimate** (our reasoning).
 "Nothing public found" means a short web search on 18 Nov 2026 turned up no report of the same thing; it does not
-mean nobody has seen it. Times are UTC.
+mean nobody has seen it. For Q30 and Q31 (20 Nov) we did not search. Times are UTC.
 
 Machine for context: i9-14900KS on an ASRock Z790I Lightning WiFi (Intel UHD 770 iGPU), RTX 5090 FE on water,
 MSI Afterburner 4.6.7 Beta 5 (build 19412) with RTSS 7.3.7, HWiNFO64 8.61 (free), PresentMon 2.6.0, 3DMark
@@ -178,6 +178,9 @@ PowerShell logger that writes the values we want to CSV. Two traps:
 On this board, starting HWiNFO also made a separate fan controller lose the Super I/O chip for about 45 s (fans
 went to full speed). Plan HWiNFO starts accordingly.
 
+Since 20 Nov HWiNFO and this logger run only for the length of a test and are stopped afterwards (README section
+9); the daily setup has no logger and no polling.
+
 <a id="q7"></a>
 ### Q7. HWiNFO INI keys we used
 
@@ -229,6 +232,12 @@ below its maximum; normal at idle. NVIDIA calls these performance limiters (Perf
 **What we saw (measured).** The flag stayed at 1 through GT2 runs in the fallback window (Q1), together with
 PresentMon showing about 13 % GPU wait per frame. Under a full fullscreen load you would expect it at 0. Use it as a
 quick check that the benchmark really loads the GPU.
+
+**It depends on the curve (measured, 20 Nov).** In borderless fullscreen heavy runs (TSE GT1, GT2, Steel Nomad,
+nvidia-smi utilisation at 90 % or more) the flag was set with a flat-topped curve: in every logged sample on
+Profile 3 "Efficient", and in 97 to 100 % of them at every step of the efficiency sweep (Q31). With the raised top (Profile 1) the same runs showed the
+"Power" flag instead, in 44 to 100 % of the samples. So on a curve with a flat top this flag does not tell you the
+benchmark is under-loading the card. We have not worked out what it does tell you there.
 
 ---
 
@@ -376,8 +385,9 @@ reset looks like a pass at stock clocks; treat a run whose voltage is far above 
 Re-apply profile, memory offset, `nvidia-smi -lgc` cap and `/wpXBARCLK_off` after every reset (a task on event
 4101 works for the cap). A memory clock reading of 14,001 MHz after a reset (stock) tells you the offset is gone.
 
-Since 19 Nov a tray tool re-applies the power limit, memory offset, XBAR offset and curve natively at startup and
-15 s after a driver reset (Q29). The reset path has not yet been exercised by a real reset.
+Since 19 Nov a tray tool (now [Central Command](https://github.com/Xipzer/central-command)) re-applies the power
+limit, memory offset, XBAR offset and curve natively at startup and 15 s after a driver reset (Q29). The reset path
+has not yet been exercised by a real reset.
 
 <a id="q18"></a>
 ### Q18. The GT2 hang is a heavy-load clock wall; a soft cap in the curve fixed it
@@ -546,8 +556,9 @@ this card and driver.
 1,120 mV) and clamped by the REL equation floor (our reading of the field names, borne out by the result), so a
 floor above the computed value wins. After the restart mVolt+ `--status` read `nvvdd_max_mv` 1,170 (REL 1,150 plus
 the ALT +20 step), and the running image matched the stored one byte for byte. Under load the voltage tops out at
-about 1.135 V read (about 1.145 V set, the REL 1,150 limit); the ALT +20 is not used. Only light loads reach it:
-4K TSE GT1 at about 540 W stayed at or under 1.02 V. Results: README
+about 1.135 V read (about 1.145 V set, the REL 1,150 limit); the ALT +20 is not used. Only light loads reach that
+top value. We first wrote here that only light loads use the higher limit at all, from one 4K TSE GT1 run that
+stayed at or under 1.02 V. That was wrong: heavy loads move up the curve too (Q28). Results: README
 [Voltage lever](README.md#voltage-lever).
 
 Nothing public found on the offsets being ignored with `runtime_voltage_offsets=1` set.
@@ -568,6 +579,15 @@ not use the new top; one load did not represent every heavy load.
 above. Result: TSE GT2 3 of 3 clean (176.6, 176.1, 176.2 fps, max 1.085 V, heavy load held at the wall), light 720p
 clean at 1.135 V, Fire Strike Ultra graphics 37,457 (+1.3 %), valid. After any change to the top of the curve,
 re-test a heavy load and log its voltage.
+
+**What the raised top costs and buys in heavy loads (measured, 20 Nov).** With that ramp in place, heavy loads sat
+at 1.03 to 1.06 V on average and, in TSE GT1 and GT2, spent part of the time above the 3,090 MHz cap. With the top
+held flat at 3,090 MHz (same image, same everything else) the card settled near 0.98 V. Alternating run by run, 5
+runs each: the raised top gave 1.6 to 2.8 % more fps in TSE GT1, GT2 and Steel Nomad, with ranges that do not
+overlap, for 79 to 114 W more mean power (peaks 620 to 668 W against at most 595 W, as reported by the card). So
+the ramp is not free in heavy loads, and it is not useless there either. An earlier claim in these notes, that the
+higher voltage limit costs heavy loads about 45 W "for no score", was never tested directly and is withdrawn.
+Numbers and method: README [section 9](README.md#9-20-nov-the-raised-top-tested-directly).
 
 Nothing public found.
 
@@ -607,17 +627,20 @@ Then written, each step read back:
   does not prove the memory is at stock; check the memory clock.
 - **No voltage this way** (measured): the voltage boost value reads 0, and runtime Vrel offsets (mVolt+ style) stay
   ignored on 621.x (Q14, Q27).
-- **Writes need admin, reads do not**: an unelevated write is refused with -137 (as recorded in the blackout-tray
+- **Writes need admin, reads do not**: an unelevated write is refused with -137 (as recorded in the tray tool's
   notes; -137 is NVAPI's "invalid user privilege").
-- **A zeroed buffer is silently ignored** (as recorded in the blackout-tray notes): read the table, change it,
+- **A zeroed buffer is silently ignored** (as recorded in the tray tool's notes): read the table, change it,
   write it back.
 
-**Remedy / result.** [blackout-tray](https://github.com/Xipzer/blackout-tray) holds both final profiles (cap 3,090
-and cap 3,075) and the XBAR offset, and applies them at startup, when the profile is switched and after a driver
-reset. The reset is noticed through a System event log subscription; **that path has not yet been exercised by a
+**Remedy / result.** A tray tool holds both final profiles (cap 3,090 and cap 3,075) and the XBAR offset, and
+applies them at startup, when the profile is switched and after a driver reset. On 19 Nov that tool was
+blackout-tray; since that evening it is [Central Command](https://github.com/Xipzer/central-command), the
+full-feature app split out of it, and blackout-tray is being cut back to screens, RGB and wake rules. Since 20 Nov
+profile 3 there is "Efficient" (Q28, Q31). The reset is noticed through a System event log subscription; **that path has not yet been exercised by a
 real driver reset.** Afterburner's start with Windows is disabled; it stays installed as the fallback and for
 monitoring during tuning sessions. Layouts, interface ids and setup:
-[docs/gpu.md](https://github.com/Xipzer/blackout-tray/blob/main/docs/gpu.md). The story with all numbers: README
+[Central Command docs/gpu.md](https://github.com/Xipzer/central-command/blob/main/docs/gpu.md). The story with all
+numbers: README
 [Without Afterburner](README.md#without-afterburner-19-nov).
 
 **Caveats.** Private interfaces that NVIDIA does not document: a future driver can change or block them. Tested on
@@ -631,6 +654,68 @@ one card (RTX 5090 FE) and one driver (621.24).
 - https://www.overclock.net/posts/29608363/: the Afterburner developer naming the interfaces
 
 We did not search for other reports of Afterburner's memory offset reading 0 in Pstates20.
+
+<a id="q30"></a>
+### Q30. Steel Nomad cannot be launched directly in fullscreen; a window across two monitors is not a test
+
+**What we saw (measured, 20 Nov).** Steel Nomad can be started directly like Time Spy (Q1):
+`3DMarkSteelNomad.exe --in <workload.json> --out <result.json>`. But:
+
+- Exclusive fullscreen fails on a direct launch.
+- The workload has no borderless option (Time Spy has `is_borderless`, Q1).
+- Window mode opens a 3840x2160 window that spans two monitors. That is not a valid test state (Q1), and the first
+  block of our 20 Nov test ran that way until it was seen on the screens. That block was discarded.
+
+**Remedy.** Start the test in window mode and, as soon as its main window exists, restyle it: set the window style
+to `0x94000000` (`WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS`, the borderless style from Q1) and move and size it to
+the bounds of one 1920x1080 monitor (`SetWindowLongPtr` with `GWL_STYLE`, then `SetWindowPos` with
+`SWP_FRAMECHANGED`). Read the rectangle back and reject the run unless it is exactly that monitor (0,0 1920x1080
+here).
+
+**The numbers are not app numbers (measured).** Steel Nomad on Profile 1:
+
+| How it ran | fps |
+|---|---|
+| 3DMark app, exclusive fullscreen | 165.2 |
+| Direct launch, window across two monitors (invalid) | 164.7 |
+| Direct launch, restyled borderless on one 1080p monitor | 160.7 (trial run), 160.80 (mean of 5) |
+
+So absolute fps from this harness differ from the app by about 3 % (about 160.8 against 165). Only compare runs
+made inside the same harness: A against B, never harness against app.
+
+We did not search for public reports.
+
+<a id="q31"></a>
+### Q31. A lower flat cap is not an undervolt: the cap does not set the voltage
+
+**What we saw (measured, 20 Nov, 2 runs per test and step: screening, not validation).** The Profile 1 curve was
+capped flat at 3,090, 3,000, 2,900 and so on down to 2,400 MHz, and TSE GT2, Steel Nomad and TSE GT1 were run at
+each step with power and voltage logged. The core voltage the card settled at did not follow the cap:
+
+| Flat cap (MHz) | 3,090 | 3,000 | 2,900 | 2,800 | 2,700 | 2,600 | 2,500 | 2,400 |
+|---|---|---|---|---|---|---|---|---|
+| TSE GT2, voltage (V) | 0.979 | 0.951 | 0.952 | 0.928 | 0.946 | 0.982 | 0.985 | 0.910 |
+| TSE GT2, mean power (W) | 524 | 494 | 474 | 437 | 422 | 406 | 410 | 367 |
+| Steel Nomad, voltage (V) | 0.975 | 0.945 | 0.946 | 0.925 | 0.943 | 0.966 | 0.982 | 0.910 |
+| Steel Nomad, mean power (W) | 573 | 533 | 520 | 476 | 464 | 449 | 452 | 406 |
+
+- The voltage went down, up and down again as the cap fell. At 2,700 MHz the two runs did not agree with each other
+  (GT2 0.930 then 0.963 V).
+- So power is not monotonic in the cap: 2,500 MHz drew more than 2,600 MHz in all three tests, at 2.5 to 2.8 %
+  less fps.
+- The big savings came at the steps where the voltage happened to fall (3,090 to 3,000, 2,900 to 2,800, 2,500 to
+  2,400).
+- No hangs in 42 runs.
+
+**Why it matters.** A flat cap limits the clock and leaves the choice of voltage to the driver. It is not a true
+undervolt, and "a lower cap draws less" is not safe to assume.
+
+**Remedy.** Log power and voltage at every step and pick by the measurement. Here the useful point is the knee at
+3,000 to 3,090 MHz: above it 1 % of fps costs 5 to 7 % of power in GT2, below it about 1.5 %. Full tables: README
+[Efficiency sweep](README.md#efficiency-sweep).
+
+The voltage values are means of HWiNFO logger samples above 400 W. We do not know what makes the card settle where
+it does. We did not search for public reports.
 
 ---
 
@@ -647,9 +732,13 @@ Before you trust a number from a GPU stability or fps test:
 5. **Check the clocks are real.** HWiNFO effective clock close to the requested clock; memory clock not 14,001 MHz
    (settings lost, Q17); XBAR offset re-applied if you use one.
 6. **One harness at a time**, nothing else using the GPU (Q20).
-7. **Same session for comparisons.** Alternate A and B within one session; do not compare fps across restarts or
-   desktop changes.
+7. **Same session for comparisons, one variable.** Alternate A and B run by run within one session, with only
+   one thing different between them; do not compare fps across restarts, days or desktop changes. Read the
+   setting back from the card before every run.
 8. **Same driver profile state**: ReBAR forced or not for the benchmark (Q23) and the XBAR offset applied (Q10).
 9. **Count runs** (Q19), and log at 100 ms with Afterburner `HwPollPeriod=100` (Q11) and a logger that survives
    an Afterburner restart (Q12).
 10. **Record the state with each result**: water temperature, VBIOS image, driver, display mode, monitors.
+11. **Log power next to fps**, mean and peak, and say where the reading comes from (the card's own sensor is not a
+    meter at the connector).
+12. **Do not mix harness fps and app scores.** A direct launch can differ from the app by a few percent (Q30).

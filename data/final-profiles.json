@@ -1,16 +1,17 @@
 {
- "name": "Final profiles, 18 Nov 2026 (top of the curve reshaped 19 Nov)",
+ "name": "Final profiles, 18 Nov 2026 (top of the curve reshaped 19 Nov; Profile 3 Efficient added and the heavy-load power claim corrected 20 Nov)",
+ "status_20_nov": "not finished: still owed are a video memory test at memory +3000, more benchmarks, long game sessions, the 10 to 12 run final pass and the image-only comparison; see README section 9",
  "rule": "Profile 1 curve (data/profile1-curve.json) with every point at or under 1060 mV held to at most the cap (a flat stretch), points above 1060 mV untouched so light loads still reach about 3247 MHz at higher voltage. Written as per-point offsets in the Afterburner profile file.",
  "common": {
   "power_limit": "700 W (VBIOS override, Afterburner 121 %)",
   "memory_offset_mhz": 3000,
-  "xbar_offset_mhz": "+400; not stored in an Afterburner profile, lost at every driver reset. Until 19 Nov sent at logon (Afterburner /wpXBARCLK_off,400); since 19 Nov written natively by blackout-tray at startup and after a driver reset",
-  "applied_by": "since 19 Nov: blackout-tray, natively through nvapi64.dll (power limit, memory offset, XBAR offset, curve last), at startup and after a driver reset; Afterburner installed but not started with Windows",
+  "xbar_offset_mhz": "+400; not stored in an Afterburner profile, lost at every driver reset. Until 19 Nov sent at logon (Afterburner /wpXBARCLK_off,400); since 19 Nov written natively by the tray tool (blackout-tray on 19 Nov, Central Command since that evening) at startup and after a driver reset",
+  "applied_by": "since 19 Nov: the tray tool (blackout-tray on 19 Nov; since that evening Central Command, https://github.com/Xipzer/central-command, while blackout-tray is being cut back to screens, RGB and wake rules), natively through nvapi64.dll (power limit, memory offset, XBAR offset, curve last), at startup and after a driver reset; Afterburner installed but not started with Windows",
   "resizable_bar": "forced on with NVIDIA Profile Inspector / NVAPI DRS (rBAR - Enable, 0x000F00BA = 1) for the predefined 3DMark driver profiles: TimeSpy, Ice Storm (Fire Strike exes), Port Royal DLSS, Steel Nomad",
   "test": "Time Spy Extreme GT2, direct launch, borderless fullscreen 1920x1080 (is_windowed=false, is_borderless=true)"
  },
  "profile_1": {
-  "slot": "blackout-tray profile 1 (applied at startup since 19 Nov); also Afterburner slot 1 and Startup",
+  "slot": "Central Command profile 1, named Maximum (applied at startup; blackout-tray on 19 Nov before the split); also Afterburner slot 1 and Startup",
   "cap_mhz": 3090,
   "cap_below_mv": 1060,
   "clock_mhz_by_mv": {
@@ -141,8 +142,9 @@
    "run": "3DMark app, valid result",
    "score": 16523,
    "fps": 165.24,
-   "note": "no gain vs 18 Nov stress loops 16492 to 16645 (no ReBAR, before the voltage lever)",
-   "telemetry": "3030 to 3037 MHz at 1.035 to 1.04 V, 660 to 678 W (18 Nov: about 2977 MHz at 1.01 V, about 625 W): about 45 W more for the same score"
+   "note": "18 Nov stress loops were 16492 to 16645 (no ReBAR, before the voltage lever). Not a controlled comparison: image, curve shape and ReBAR all changed in between and the loops spread by 0.7 to 0.9 %",
+   "telemetry": "3030 to 3037 MHz at 1.035 to 1.04 V, 660 to 678 W (18 Nov: about 2977 MHz at 1.01 V, about 625 W)",
+   "correction_20_nov": "this entry said 'no gain' and 'about 45 W more for the same score'. That was never tested directly. See raised_top_test_20_nov and data/raised-top-and-efficiency.json"
   },
   "steel_nomad_stress_test_19_nov": {
    "date": "2026-11-19",
@@ -165,7 +167,7 @@
   }
  },
  "profile_2": {
-  "slot": "blackout-tray profile 2 (since 19 Nov); also Afterburner slot 2",
+  "slot": "Central Command profile 2, named Reliable (blackout-tray on 19 Nov before the split); also Afterburner slot 2",
   "cap_mhz": 3075,
   "cap_below_mv": 1060,
   "clock_mhz_by_mv": {
@@ -265,6 +267,28 @@
   },
   "note": "the 720p light test is CPU bound (about 275 to 278 fps), so clocks are the metric; game validation pending",
   "heavy_loads_19_nov": "with the 1170 mV limit heavy loads ran at 1.065 to 1.08 V (Fire Strike Ultra 3180 to 3217 MHz) on the old 1065 to 1070 mV step; two driver resets (19 Nov 00:06 and 09:28, about 610 to 620 W); fix = cap to 1100 mV (QUIRKS Q28)",
-  "heavy_load_power_caveat_19_nov": "with REL 1150 heavy loads ride up the flat cap region: Steel Nomad 3030 to 3037 MHz at 1.035 to 1.04 V, 660 to 678 W vs 18 Nov about 2977 MHz at 1.01 V, about 625 W; about 45 W more for the same score. The voltage raise only pays off in lighter loads (Fire Strike Ultra)."
+  "heavy_load_power_caveat_19_nov": "WITHDRAWN 20 Nov. It said: with REL 1150 heavy loads cost about 45 W more for the same score and the voltage raise only pays off in lighter loads. That compared Steel Nomad readings from different days (19 Nov 3030 to 3037 MHz at 1.035 to 1.04 V, 660 to 678 W; 18 Nov about 2977 MHz at 1.01 V, about 625 W) with image, curve shape and ReBAR all changed. It was never tested directly. Measured result: raised_top_test_20_nov."
+ },
+ "raised_top_test_20_nov": {
+  "what": "one variable, the top of the curve: Profile 1 Maximum (cap 3090 MHz up to 1100 mV, ramp to 3440 MHz at 1150 mV) against Profile 3 Efficient (same curve, top held flat at 3090 MHz); same image (REL 1150), memory +3000, XBAR +400, ReBAR as set, 700 W limit",
+  "method": "alternating run by run, 5 runs per test and profile, water at or under 32.5 C at each start, profile applied and read back from the card before every run, borderless fullscreen 1920x1080 on one monitor; power from nvidia-smi (the card's own reading)",
+  "fps_mean_w_mean_w_peak": {
+   "tse_gt1": {"maximum": [180.90, 602, 620], "efficient": [175.99, 488, 513]},
+   "tse_gt2": {"maximum": [176.85, 633, 663], "efficient": [172.45, 524, 582]},
+   "steel_nomad": {"maximum": [160.80, 652, 668], "efficient": [158.22, 573, 595]},
+   "light_720p_gt1": {"maximum": [274.63, 324, 354], "efficient": [273.86, 211, 230]}
+  },
+  "hangs": "0 in 40 runs",
+  "result": "in the heavy tests the raised top buys 1.6 to 2.8 % more fps (Efficient is 1.6 to 2.7 % slower) for 79 to 114 W more; fps ranges do not overlap. In the CPU-bound light test: 0.3 %, ranges overlap, for 113 W more",
+  "not_tested": "the image on its own (old image against REL 1150 on the same curve); deferred, needs restarts",
+  "details": "data/raised-top-and-efficiency.json, data/raised-top-ab-test.jsonl, README section 9"
+ },
+ "profile_3": {
+  "name": "Efficient",
+  "added": "2026-11-20",
+  "slot": "Central Command profile 3 (replaces the stale +360 fixed fallback)",
+  "rule": "Profile 1 (19 Nov shape) with the top held flat at 3090 MHz: no ramp above 1100 mV; same power limit, memory offset and XBAR offset",
+  "result": "20 clean harness runs in the 20 Nov test (5 each of TSE GT1, TSE GT2, Steel Nomad, light 720p); heavy tests stayed at or under 595 W as reported by the card",
+  "status": "not validated beyond those 20 runs: no app run, no stress test, no games"
  }
 }
